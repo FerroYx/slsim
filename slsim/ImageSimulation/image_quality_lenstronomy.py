@@ -282,10 +282,11 @@ def get_all_supported_bands():
 def get_band_central_wavelength(band):
     """Return an approximate central wavelength for a registered band.
 
-    The built-in LSST, Roman, and Euclid bands use fixed wavelength values in
-    microns. For custom registered observatories, this function falls back to
-    the band's order within the observatory registry so callers can still build
-    monotonic band-dependent behavior.
+    The built-in LSST, Roman, and Euclid bands use fixed wavelength
+    values in microns. For custom registered observatories, this
+    function falls back to the band's order within the observatory
+    registry so callers can still build monotonic band-dependent
+    behavior.
 
     :param band: Imaging band name.
     :type band: str
