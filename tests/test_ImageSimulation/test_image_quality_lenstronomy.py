@@ -8,6 +8,8 @@ from slsim.ImageSimulation.image_quality_lenstronomy import (
     get_observatory,
     register_observatory,
     get_all_supported_bands,
+    get_band_central_wavelength,
+    get_band_normalized_position,
 )
 
 
@@ -246,6 +248,13 @@ def test_get_all_supported_bands_contains_defaults():
     ]
     for band in expected_bands:
         assert band in all_bands
+
+
+def test_default_band_wavelength_ordering():
+    assert get_band_central_wavelength("g") < get_band_central_wavelength("i")
+    assert get_band_central_wavelength("F106") < get_band_central_wavelength("F184")
+    assert get_band_central_wavelength("VIS") < get_band_central_wavelength("H")
+    assert get_band_normalized_position("F184", reference_band="g") > 0
 
 
 if __name__ == "__main__":

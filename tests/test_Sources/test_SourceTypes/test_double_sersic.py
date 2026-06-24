@@ -82,6 +82,27 @@ class TestDoubleSersic:
         result = self.source.surface_brightness_reff(band="i")
         npt.assert_almost_equal(result, 21.313, decimal=3)
 
+    def test_band_dependent_color_gradient(self):
+        source_dict = dict(self.source_dict)
+        source_dict.update(
+            {
+                "mag_g": 23,
+                "mag_y": 23,
+                "color_gradient": {"strength": 2.0, "reference_band": "i"},
+            }
+        )
+        source = DoubleSersic(**source_dict)
+
+        _, kwargs_g = source.kwargs_extended_light(band="g")
+        _, kwargs_y = source.kwargs_extended_light(band="y")
+
+        flux_g0 = 10 ** (-kwargs_g[0]["magnitude"] / 2.5)
+        flux_g1 = 10 ** (-kwargs_g[1]["magnitude"] / 2.5)
+        flux_y0 = 10 ** (-kwargs_y[0]["magnitude"] / 2.5)
+        flux_y1 = 10 ** (-kwargs_y[1]["magnitude"] / 2.5)
+
+        assert flux_y0 / (flux_y0 + flux_y1) > flux_g0 / (flux_g0 + flux_g1)
+
 
 if __name__ == "__main__":
     pytest.main()

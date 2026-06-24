@@ -2,6 +2,7 @@ import numpy as np
 from slsim.Sources.SourceTypes.source_base import SourceBase
 from slsim.Util.param_util import ellipticity_slsim_to_lenstronomy
 from slsim.Util.param_util import surface_brightness_reff
+from slsim.ImageSimulation.image_quality_lenstronomy import get_band_normalized_position
 
 
 class DoubleSersic(SourceBase):
@@ -19,6 +20,7 @@ class DoubleSersic(SourceBase):
         e2_0=0,
         e1_1=0,
         e2_1=0,
+        color_gradient=None,
         **source_dict
     ):
         """
@@ -33,6 +35,10 @@ class DoubleSersic(SourceBase):
         :param e2_1: eccentricity component of second Sersic
         :param w0: flux weight of first Sersic component
         :param w1: flux weight of second Sersic component, if =None, will be set w1 = 1 - w0, otherwise it has to match.
+        :param color_gradient: Optional dictionary defining a band-dependent
+         two-component colour gradient. Supported keys are ``strength`` and
+         ``reference_band``. Positive ``strength`` makes the first Sersic
+         component redder, while negative ``strength`` makes it bluer.
 
         :param source_dict: dictionary for SourceBase() option (see documentation)
         :type source_dict: dict or astropy.table.Table
@@ -50,6 +56,7 @@ class DoubleSersic(SourceBase):
         w1 = 1 - w0
         assert np.isclose(w0 + w1, 1, rtol=1e-3)
         self._w1 = w1
+        self._color_gradient = color_gradient
 
         self._light_model_list = [
             "SERSIC_ELLIPSE",
@@ -118,8 +125,9 @@ class DoubleSersic(SourceBase):
         center_source = self.extended_source_position
         # compute magnitude for each sersic component based on weight
         flux = 10 ** (-mag_source / 2.5)
-        mag_source0 = -2.5 * np.log10(self._w0 * flux)
-        mag_source1 = -2.5 * np.log10(self._w1 * flux)
+        w0, w1 = self._weights_for_band(band)
+        mag_source0 = -2.5 * np.log10(w0 * flux)
+        mag_source1 = -2.5 * np.log10(w1 * flux)
         # convert from slsim to lenstronomy convention.
         e1_light_source_1_lenstronomy, e2_light_source_1_lenstronomy = (
             ellipticity_slsim_to_lenstronomy(
@@ -155,6 +163,48 @@ class DoubleSersic(SourceBase):
             },
         ]
         return self._light_model_list, kwargs_extended_source
+
+    def _weights_for_band(self, band):
+        """Return Sersic component weights for an imaging band."""
+        if band is None or self._color_gradient is None:
+            return self._w0, self._w1
+        if not isinstance(self._color_gradient, dict):
+            raise ValueError("color_gradient must be a dictionary or None.")
+
+        strength = float(self._color_gradient.get("strength", 0.0))
+        if strength == 0:
+            return self._w0, self._w1
+
+        reference_band = self._color_gradient.get("reference_band")
+        if reference_band is None:
+            reference_band = self._default_reference_band()
+
+        min_weight = float(self._color_gradient.get("min_weight", 1e-4))
+        if not 0 <= min_weight < 0.5:
+            raise ValueError("color_gradient['min_weight'] must be in [0, 0.5).")
+
+        band_offset = get_band_normalized_position(
+            band=band, reference_band=reference_band
+        )
+        logit_w0 = np.log(self._w0 / self._w1)
+        w0 = 1 / (1 + np.exp(-(logit_w0 + strength * band_offset)))
+        w0 = np.clip(w0, min_weight, 1 - min_weight)
+        return float(w0), float(1 - w0)
+
+    def _default_reference_band(self):
+        """Choose the available band closest to the default i band."""
+        available_bands = [
+            key.replace("mag_", "", 1)
+            for key in self.source_dict
+            if isinstance(key, str) and key.startswith("mag_")
+        ]
+        if not available_bands:
+            return "i"
+        positions = [
+            abs(get_band_normalized_position(band=band, reference_band="i"))
+            for band in available_bands
+        ]
+        return available_bands[int(np.argmin(positions))]
 
     def _shape_light_model(self):
         """

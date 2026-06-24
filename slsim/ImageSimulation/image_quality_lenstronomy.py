@@ -10,6 +10,27 @@ ROMAN_BAND_LIST = ["F062", "F087", "F106", "F129", "F158", "F184", "F146", "F213
 LSST_BAND_LIST = ["u", "g", "r", "i", "z", "y"]
 EUCLID_BAND_LIST = ["VIS", "Y", "J", "H"]
 
+_DEFAULT_BAND_CENTRAL_WAVELENGTH_MICRON = {
+    "u": 0.367,
+    "g": 0.482,
+    "r": 0.622,
+    "i": 0.755,
+    "z": 0.869,
+    "y": 0.971,
+    "VIS": 0.715,
+    "Y": 1.063,
+    "J": 1.285,
+    "H": 1.577,
+    "F062": 0.620,
+    "F087": 0.870,
+    "F106": 1.060,
+    "F129": 1.290,
+    "F146": 1.460,
+    "F158": 1.580,
+    "F184": 1.840,
+    "F213": 2.130,
+}
+
 
 def check_speclite_name(band):
     """Checks if the raw band name is a valid speclite filter.
@@ -256,3 +277,58 @@ def get_all_supported_bands():
     for info in _OBSERVATORY_REGISTRY.values():
         all_bands.extend(info["bands"])
     return all_bands
+
+
+def get_band_central_wavelength(band):
+    """Return an approximate central wavelength for a registered band.
+
+    The built-in LSST, Roman, and Euclid bands use fixed wavelength values in
+    microns. For custom registered observatories, this function falls back to
+    the band's order within the observatory registry so callers can still build
+    monotonic band-dependent behavior.
+
+    :param band: Imaging band name.
+    :type band: str
+    :return: Approximate central wavelength in microns.
+    :rtype: float
+    :raises ValueError: if the band is not registered.
+    """
+    if band in _DEFAULT_BAND_CENTRAL_WAVELENGTH_MICRON:
+        return _DEFAULT_BAND_CENTRAL_WAVELENGTH_MICRON[band]
+
+    obs_name = get_observatory(band)
+    bands = _OBSERVATORY_REGISTRY[obs_name]["bands"]
+    if len(bands) == 1:
+        return 0.0
+    return float(bands.index(band)) / float(len(bands) - 1)
+
+
+def get_band_normalized_position(band, reference_band=None):
+    """Return a normalized wavelength position for a registered band.
+
+    Built-in LSST, Roman, and Euclid bands are normalized over the full set of
+    built-in bands, so mixed-observatory simulations are ordered consistently.
+    Custom bands fall back to their observatory-local registry order.
+
+    :param band: Imaging band name.
+    :type band: str
+    :param reference_band: Optional reference band. If provided, return
+        ``position(band) - position(reference_band)``.
+    :type reference_band: str or None
+    :return: Normalized position or position offset.
+    :rtype: float
+    :raises ValueError: if any requested band is not registered.
+    """
+    wavelength = get_band_central_wavelength(band)
+
+    if band in _DEFAULT_BAND_CENTRAL_WAVELENGTH_MICRON:
+        wavelength_values = list(_DEFAULT_BAND_CENTRAL_WAVELENGTH_MICRON.values())
+        min_wavelength = min(wavelength_values)
+        max_wavelength = max(wavelength_values)
+        position = (wavelength - min_wavelength) / (max_wavelength - min_wavelength)
+    else:
+        position = wavelength
+
+    if reference_band is None:
+        return position
+    return position - get_band_normalized_position(reference_band)
