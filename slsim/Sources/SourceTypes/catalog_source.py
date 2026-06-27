@@ -239,7 +239,8 @@ class CatalogSource(SourceBase):
         return light_model_list, kwargs_extended_source
 
     def _image_for_band(self, band):
-        """Return the catalog image, optionally with HST chromatic morphology."""
+        """Return the catalog image, optionally with HST chromatic
+        morphology."""
         if self._band_dependent_color_gradient:
             image = self._chromatic_template
         else:
@@ -277,10 +278,10 @@ class CatalogSource(SourceBase):
     def _clean_hst_template(self, image):
         """Return a clean, non-negative HST morphology template.
 
-        The COSMOS postage stamps include background noise and may include
-        neighbouring objects. Chromatic reweighting of those pixels produces
-        artificial lensed features, so this method retains only the central
-        detected object with an apodized mask.
+        The COSMOS postage stamps include background noise and may
+        include neighbouring objects. Chromatic reweighting of those
+        pixels produces artificial lensed features, so this method
+        retains only the central detected object with an apodized mask.
         """
         image = np.asarray(image, dtype=float)
         background, noise_rms = self._hst_background_statistics(image)
@@ -311,7 +312,11 @@ class CatalogSource(SourceBase):
         """Return catalog noise statistics, with an edge-pixel fallback."""
         noise_mean = self._matched_source["NOISE_MEAN"]
         noise_variance = self._matched_source["NOISE_VARIANCE"]
-        if np.isfinite(noise_mean) and np.isfinite(noise_variance) and noise_variance > 0:
+        if (
+            np.isfinite(noise_mean)
+            and np.isfinite(noise_variance)
+            and noise_variance > 0
+        ):
             return float(noise_mean), float(np.sqrt(noise_variance))
 
         edge_width = max(2, min(image.shape) // 10)
@@ -339,7 +344,9 @@ class CatalogSource(SourceBase):
 
         closest_label = min(
             valid_labels,
-            key=lambda current_label: np.min(center_distance[labeled_image == current_label]),
+            key=lambda current_label: np.min(
+                center_distance[labeled_image == current_label]
+            ),
         )
         maximum_distance = 1.5 * self.angular_size / self._scale
         if np.min(center_distance[labeled_image == closest_label]) > maximum_distance:
@@ -347,7 +354,8 @@ class CatalogSource(SourceBase):
         return closest_label
 
     def _has_template_margin(self, source_mask):
-        """Require one effective radius of clean cutout around the source mask."""
+        """Require one effective radius of clean cutout around the source
+        mask."""
         y_indices, x_indices = np.nonzero(source_mask)
         margin = min(
             np.min(y_indices),

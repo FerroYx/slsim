@@ -5,7 +5,6 @@ from astropy.cosmology import FlatLambdaCDM
 
 from slsim.Sources.SourceCatalogues.HSTCosmosCatalog import galaxy_match
 
-
 HST_COSMOS_PATH = os.path.join(
     str(pathlib.Path(__file__).parent.parent.parent),
     "TestData",

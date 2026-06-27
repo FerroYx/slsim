@@ -114,7 +114,9 @@ class TestDoubleSersic:
 
     def test_default_reference_band_and_weight_validation(self):
         source_dict = dict(self.source_dict)
-        source_dict.update({"mag_g": 23, "mag_y": 23, "color_gradient": {"strength": 1.0}})
+        source_dict.update(
+            {"mag_g": 23, "mag_y": 23, "color_gradient": {"strength": 1.0}}
+        )
         source = DoubleSersic(**source_dict)
 
         assert source._default_reference_band() == "i"
