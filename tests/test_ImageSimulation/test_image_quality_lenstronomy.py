@@ -257,5 +257,30 @@ def test_default_band_wavelength_ordering():
     assert get_band_normalized_position("F184", reference_band="g") > 0
 
 
+def test_band_wavelength_helpers_cover_hst_and_custom_registry_fallback():
+    assert get_band_central_wavelength("F814W") == pytest.approx(0.805)
+    assert get_band_normalized_position("F814W", reference_band="F814W") == 0
+
+    register_observatory(
+        name="WavelengthTestObs",
+        observatory_class=DummyObservatory,
+        bands=["W1", "W2", "W3"],
+    )
+    assert get_band_central_wavelength("W1") == 0.0
+    assert get_band_central_wavelength("W2") == 0.5
+    assert get_band_normalized_position("W3", reference_band="W1") == 1.0
+
+    register_observatory(
+        name="SingleBandTestObs",
+        observatory_class=DummyObservatory,
+        bands=["OnlyBand"],
+    )
+    assert get_band_central_wavelength("OnlyBand") == 0.0
+    assert get_band_normalized_position("OnlyBand") == 0.0
+
+    with pytest.raises(ValueError, match="not recognised"):
+        get_band_central_wavelength("UnknownBand")
+
+
 if __name__ == "__main__":
     pytest.main()

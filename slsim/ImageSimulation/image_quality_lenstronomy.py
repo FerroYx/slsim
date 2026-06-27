@@ -29,6 +29,7 @@ _DEFAULT_BAND_CENTRAL_WAVELENGTH_MICRON = {
     "F158": 1.580,
     "F184": 1.840,
     "F213": 2.130,
+    "F814W": 0.805,
 }
 
 

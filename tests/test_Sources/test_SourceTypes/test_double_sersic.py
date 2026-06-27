@@ -1,5 +1,6 @@
 from slsim.Sources.SourceTypes.double_sersic import DoubleSersic
 from slsim.Util.param_util import ellipticity_slsim_to_lenstronomy
+import numpy as np
 import pytest
 from numpy import testing as npt
 
@@ -102,6 +103,49 @@ class TestDoubleSersic:
         flux_y1 = 10 ** (-kwargs_y[1]["magnitude"] / 2.5)
 
         assert flux_y0 / (flux_y0 + flux_y1) > flux_g0 / (flux_g0 + flux_g1)
+
+    def test_color_gradient_disabled_or_zero_strength_uses_base_weights(self):
+        assert self.source._weights_for_band("i") == (0.4, 0.6)
+
+        source_dict = dict(self.source_dict)
+        source_dict["color_gradient"] = {"strength": 0.0}
+        zero_gradient_source = DoubleSersic(**source_dict)
+        assert zero_gradient_source._weights_for_band("i") == (0.4, 0.6)
+
+    def test_default_reference_band_and_weight_validation(self):
+        source_dict = dict(self.source_dict)
+        source_dict.update({"mag_g": 23, "mag_y": 23, "color_gradient": {"strength": 1.0}})
+        source = DoubleSersic(**source_dict)
+
+        assert source._default_reference_band() == "i"
+        assert source._weights_for_band("i") == (0.4, 0.6)
+
+        source_without_magnitudes = dict(self.source_dict)
+        source_without_magnitudes.pop("mag_i")
+        source_without_magnitudes["color_gradient"] = {"strength": 1.0}
+        no_magnitude_source = DoubleSersic(**source_without_magnitudes)
+        assert no_magnitude_source._default_reference_band() == "i"
+
+        source_dict["color_gradient"] = "invalid"
+        with pytest.raises(ValueError, match="must be a dictionary"):
+            DoubleSersic(**source_dict)._weights_for_band("i")
+
+        source_dict["color_gradient"] = {"strength": 1.0, "min_weight": 0.5}
+        with pytest.raises(ValueError, match=r"must be in \[0, 0.5\)"):
+            DoubleSersic(**source_dict)._weights_for_band("i")
+
+    def test_color_gradient_clips_component_weight(self):
+        source_dict = dict(self.source_dict)
+        source_dict["color_gradient"] = {
+            "strength": 100.0,
+            "reference_band": "i",
+            "min_weight": 0.2,
+        }
+        source = DoubleSersic(**source_dict)
+
+        w0, w1 = source._weights_for_band("F213")
+        assert np.isclose(w0, 0.8)
+        assert np.isclose(w0 + w1, 1.0)
 
 
 if __name__ == "__main__":
