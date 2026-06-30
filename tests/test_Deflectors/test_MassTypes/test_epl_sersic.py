@@ -1,5 +1,4 @@
 import pytest
-
 from slsim.Deflectors.MassTypes.epl import EPL
 from slsim.Sources.source import Source
 from astropy.cosmology import FlatLambdaCDM
@@ -107,7 +106,6 @@ class TestEPLSersic(object):
     def test_halo_porperties(self):
         gamma = self.sie_sersic.mass_properties["gamma_pl"]
         assert gamma == 2.0
-
 
 if __name__ == "__main__":
     pytest.main()

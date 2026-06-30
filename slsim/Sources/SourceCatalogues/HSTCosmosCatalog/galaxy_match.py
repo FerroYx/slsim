@@ -186,8 +186,6 @@ def process_catalog(cosmo, catalog_path):
         "GAL_FILENAME",
         "GAL_HDU",
         "PIXEL_SCALE",
-        "NOISE_MEAN",
-        "NOISE_VARIANCE",
         "axis_ratio",
         "sersic_index",
         "sersic_angle",  # radians

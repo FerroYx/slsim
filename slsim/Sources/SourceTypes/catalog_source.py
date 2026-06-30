@@ -1,12 +1,12 @@
-import numpy as np
-from scipy.ndimage import binary_dilation, gaussian_filter, label
-
 from slsim.Sources.SourceTypes.double_sersic import DoubleSersic
 from slsim.Sources.SourceTypes.single_sersic import SingleSersic
 from slsim.Sources.SourceTypes.source_base import SourceBase
 from slsim.Sources.SourceCatalogues.CosmosWebCatalog import galaxy_match as CosmosWeb
 from slsim.Sources.SourceCatalogues.HSTCosmosCatalog import galaxy_match as HSTCosmos
-from slsim.ImageSimulation.image_quality_lenstronomy import get_band_normalized_position
+from slsim.Util.color_gradient import (
+    edge_apodized_image,
+    radial_color_gradient_image,
+)
 from lenstronomy.Util.param_util import ellipticity2phi_q
 
 CATALOG_TYPES = ["HST_COSMOS, COSMOS_WEB"]
@@ -66,9 +66,10 @@ class CatalogSource(SourceBase):
          colour-gradient transfer to matched HST_COSMOS images. Failed matches
          fall back to a DoubleSersic model with the same ``color_gradient``.
         :type band_dependent_color_gradient: bool
-        :param color_gradient: Dictionary containing the DoubleSersic
-         colour-gradient settings. ``strength`` controls the gradient and
-         ``reference_band`` defaults to ``F814W`` for HST_COSMOS images.
+        :param color_gradient: Dictionary containing colour-gradient settings.
+         Matched HST_COSMOS images use ``grad_color`` (mag/dex) with
+         ``reference_band`` defaulting to ``F814W``. DoubleSersic fallback uses
+         ``component_spectral_slopes``.
         :type color_gradient: dict or None
         :param fallback_double_sersic_kwargs: Optional overrides for the
          DoubleSersic parameters used after a failed HST_COSMOS match.
@@ -207,15 +208,10 @@ class CatalogSource(SourceBase):
 
         if self._band_dependent_color_gradient and self._image_list is not None:
             if not hasattr(self, "_chromatic_template"):
-                try:
-                    self._chromatic_template = self._clean_hst_template(
-                        self._image_list[0]
-                    )
-                except ValueError:
-                    self._chromatic_template = None
-
-            if self._chromatic_template is None:
-                return self._double_sersic_fallback().kwargs_extended_light(band=band)
+                edge_width = self._color_gradient.get("edge_apodization_pixels")
+                self._chromatic_template = edge_apodized_image(
+                    self._image_list[0], edge_width=edge_width
+                )
 
         if band is None:
             mag_source = 1
@@ -249,121 +245,14 @@ class CatalogSource(SourceBase):
         if not self._band_dependent_color_gradient or band is None:
             return image
 
-        reference_band = self._color_gradient.get("reference_band") or "F814W"
-        strength = float(self._color_gradient.get("strength", 0.0))
-        band_offset = get_band_normalized_position(
-            band=band, reference_band=reference_band
+        return radial_color_gradient_image(
+            image=image,
+            band=band,
+            color_gradient=self._color_gradient,
+            angular_size=self.angular_size,
+            pixel_scale=self._scale,
+            default_reference="F814W",
         )
-        if strength == 0 or band_offset == 0:
-            return image
-
-        y_grid, x_grid = np.indices(image.shape, dtype=float)
-        center_x = (image.shape[1] - 1) / 2
-        center_y = (image.shape[0] - 1) / 2
-        radius = np.hypot(x_grid - center_x, y_grid - center_y)
-        half_light_radius_pixels = self.angular_size / self._scale
-        radius = np.maximum(radius, 0.5)
-        radius_ratio = radius / max(half_light_radius_pixels, 0.5)
-
-        # Bound the radial response so small HST pixels cannot dominate a band.
-        radial_coordinate = np.tanh(np.log(radius_ratio))
-        exponent = -0.5 * strength * band_offset * radial_coordinate
-        chromatic_image = image * np.exp(exponent)
-        original_flux = np.sum(image)
-        chromatic_flux = np.sum(chromatic_image)
-        if chromatic_flux != 0:
-            chromatic_image *= original_flux / chromatic_flux
-        return chromatic_image
-
-    def _clean_hst_template(self, image):
-        """Return a clean, non-negative HST morphology template.
-
-        The COSMOS postage stamps include background noise and may
-        include neighbouring objects. Chromatic reweighting of those
-        pixels produces artificial lensed features, so this method
-        retains only the central detected object with an apodized mask.
-        """
-        image = np.asarray(image, dtype=float)
-        background, noise_rms = self._hst_background_statistics(image)
-        background_subtracted = image - background
-        smoothed_image = gaussian_filter(background_subtracted, sigma=1.0)
-        threshold = 2.5 * noise_rms
-        labeled_image, number_of_labels = label(smoothed_image > threshold)
-        if number_of_labels == 0:
-            raise ValueError("HST template has no detected central source.")
-
-        source_label = self._central_source_label(labeled_image)
-        if source_label is None:
-            raise ValueError("HST template has no source close to its centre.")
-
-        source_mask = labeled_image == source_label
-        source_mask = binary_dilation(source_mask, iterations=2)
-        if not self._has_template_margin(source_mask):
-            raise ValueError("HST template source is too close to the cutout edge.")
-
-        soft_mask = gaussian_filter(source_mask.astype(float), sigma=1.0)
-        soft_mask /= np.max(soft_mask)
-        clean_image = np.clip(background_subtracted, 0, None) * soft_mask
-        if not np.any(clean_image > 0):
-            raise ValueError("HST template has no positive source flux after cleaning.")
-        return clean_image
-
-    def _hst_background_statistics(self, image):
-        """Return catalog noise statistics, with an edge-pixel fallback."""
-        noise_mean = self._matched_source["NOISE_MEAN"]
-        noise_variance = self._matched_source["NOISE_VARIANCE"]
-        if (
-            np.isfinite(noise_mean)
-            and np.isfinite(noise_variance)
-            and noise_variance > 0
-        ):
-            return float(noise_mean), float(np.sqrt(noise_variance))
-
-        edge_width = max(2, min(image.shape) // 10)
-        edge_pixels = np.concatenate(
-            (
-                image[:edge_width, :].ravel(),
-                image[-edge_width:, :].ravel(),
-                image[:, :edge_width].ravel(),
-                image[:, -edge_width:].ravel(),
-            )
-        )
-        background = np.median(edge_pixels)
-        noise_rms = 1.4826 * np.median(np.abs(edge_pixels - background))
-        return float(background), float(max(noise_rms, np.finfo(float).eps))
-
-    def _central_source_label(self, labeled_image):
-        """Select the detected segment nearest the expected cutout centre."""
-        y_grid, x_grid = np.indices(labeled_image.shape)
-        center_x = (labeled_image.shape[1] - 1) / 2
-        center_y = (labeled_image.shape[0] - 1) / 2
-        center_distance = np.hypot(x_grid - center_x, y_grid - center_y)
-        valid_labels = np.unique(labeled_image[labeled_image > 0])
-        if len(valid_labels) == 0:
-            return None
-
-        closest_label = min(
-            valid_labels,
-            key=lambda current_label: np.min(
-                center_distance[labeled_image == current_label]
-            ),
-        )
-        maximum_distance = 1.5 * self.angular_size / self._scale
-        if np.min(center_distance[labeled_image == closest_label]) > maximum_distance:
-            return None
-        return closest_label
-
-    def _has_template_margin(self, source_mask):
-        """Require one effective radius of clean cutout around the source
-        mask."""
-        y_indices, x_indices = np.nonzero(source_mask)
-        margin = min(
-            np.min(y_indices),
-            source_mask.shape[0] - 1 - np.max(y_indices),
-            np.min(x_indices),
-            source_mask.shape[1] - 1 - np.max(x_indices),
-        )
-        return margin >= max(2, self.angular_size / self._scale)
 
     def _double_sersic_fallback(self):
         """Build the chromatic fallback model after a failed HST match."""

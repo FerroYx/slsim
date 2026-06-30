@@ -382,20 +382,34 @@ def convert_catalog_to_source(
 
     if extended_source_type == "double_sersic":
         if "e1_0" not in colnames or "e2_0" not in colnames:
-            if "ellipticity0" in colnames:
+            if "e1" in colnames and "e2" in colnames:
+                e1_0, e2_0 = galaxy["e1"], galaxy["e2"]
+            elif "e1_light" in colnames and "e2_light" in colnames:
+                e1_0, e2_0 = galaxy["e1_light"], galaxy["e2_light"]
+            elif "ellipticity0" in colnames:
                 ellipticity0 = galaxy["ellipticity0"]
             elif "a0" in colnames and "b0" in colnames:
                 axis_ratio_0 = axis_ratio(a=galaxy["a0"], b=galaxy["b0"])
                 ellipticity0 = eccentricity(q=axis_ratio_0)
+            elif "ellipticity" in colnames or "e" in colnames:
+                ellipticity0 = (
+                    galaxy["ellipticity"]
+                    if "ellipticity" in colnames
+                    else galaxy["e"]
+                )
             else:
                 raise ValueError(
                     "ellipticity or semi-major and semi-minor axis are missing for"
                     " the first light profile in galaxy_list columns"
                 )
 
-            e1_0, e2_0 = galaxy_projected_eccentricity(
-                float(ellipticity0), rotation_angle=phi_rot
-            )
+            if not (
+                ("e1" in colnames and "e2" in colnames)
+                or ("e1_light" in colnames and "e2_light" in colnames)
+            ):
+                e1_0, e2_0 = galaxy_projected_eccentricity(
+                    float(ellipticity0), rotation_angle=phi_rot
+                )
             kwargs_source["e1_0"] = e1_0
             kwargs_source["e2_0"] = e2_0
 
@@ -404,20 +418,34 @@ def convert_catalog_to_source(
             kwargs_source["e2_0"] = galaxy["e2_0"]
 
         if "e1_1" not in colnames or "e2_1" not in colnames:
-            if "ellipticity1" in colnames:
+            if "e1" in colnames and "e2" in colnames:
+                e1_1, e2_1 = galaxy["e1"], galaxy["e2"]
+            elif "e1_light" in colnames and "e2_light" in colnames:
+                e1_1, e2_1 = galaxy["e1_light"], galaxy["e2_light"]
+            elif "ellipticity1" in colnames:
                 ellipticity1 = galaxy["ellipticity1"]
             elif "a1" in colnames and "b1" in colnames:
                 axis_ratio_1 = axis_ratio(a=galaxy["a1"], b=galaxy["b1"])
                 ellipticity1 = eccentricity(q=axis_ratio_1)
+            elif "ellipticity" in colnames or "e" in colnames:
+                ellipticity1 = (
+                    galaxy["ellipticity"]
+                    if "ellipticity" in colnames
+                    else galaxy["e"]
+                )
             else:
                 raise ValueError(
                     "ellipticity or semi-major and semi-minor axis are missing for"
                     " the second light profile in galaxy_list columns"
                 )
 
-            e1_1, e2_1 = galaxy_projected_eccentricity(
-                float(ellipticity1), rotation_angle=phi_rot
-            )
+            if not (
+                ("e1" in colnames and "e2" in colnames)
+                or ("e1_light" in colnames and "e2_light" in colnames)
+            ):
+                e1_1, e2_1 = galaxy_projected_eccentricity(
+                    float(ellipticity1), rotation_angle=phi_rot
+                )
             kwargs_source["e1_1"] = e1_1
             kwargs_source["e2_1"] = e2_1
         else:
@@ -428,12 +456,37 @@ def convert_catalog_to_source(
                 kwargs_source["angular_size_0"] = average_angular_size(
                     a=galaxy["a0"], b=galaxy["b0"]
                 )
+            elif "angular_size" in colnames or catalog_type is not None:
+                angular_size, _ = _galaxy_size(
+                    galaxy,
+                    size_model=size_model,
+                    catalog_type=catalog_type,
+                    cosmo=cosmo,
+                )
+                color_gradient = (
+                    galaxy["color_gradient"] if "color_gradient" in colnames else {}
+                )
+                radius_factors = color_gradient.get(
+                    "component_radius_factors", (0.5, 1.5)
+                )
+                if len(radius_factors) != 2:
+                    raise ValueError(
+                        "color_gradient['component_radius_factors'] must contain two values."
+                    )
+                kwargs_source["angular_size_0"] = angular_size * float(
+                    radius_factors[0]
+                )
+                kwargs_source["angular_size_1"] = angular_size * float(
+                    radius_factors[1]
+                )
             else:
                 raise ValueError(
-                    "semi-major and semi-minor axis are missing for the first light"
-                    " profile in galaxy_list columns %s" % colnames
+                    "semi-major and semi-minor axis or angular_size are missing "
+                    "for the light profile in galaxy_list columns %s" % colnames
                 )
-            if "a1" in colnames and "b1" in colnames:
+            if "angular_size_1" in kwargs_source:
+                pass
+            elif "a1" in colnames and "b1" in colnames:
                 kwargs_source["angular_size_1"] = average_angular_size(
                     a=galaxy["a1"], b=galaxy["b1"]
                 )
@@ -446,13 +499,31 @@ def convert_catalog_to_source(
             kwargs_source["angular_size_0"] = galaxy["angular_size_0"]
             kwargs_source["angular_size_1"] = galaxy["angular_size_1"]
         if "n_sersic_0" not in colnames or "n_sersic_1" not in colnames:
-            kwargs_source["n_sersic_0"] = 1
-            kwargs_source["n_sersic_1"] = 4
+            if "n_sersic" in colnames:
+                n_sersic = float(galaxy["n_sersic"])
+            elif "galaxy_type" in colnames and galaxy["galaxy_type"] == "red":
+                n_sersic = 4.0
+            else:
+                n_sersic = 1.0
+            color_gradient = (
+                galaxy["color_gradient"] if "color_gradient" in colnames else {}
+            )
+            indices = color_gradient.get(
+                "component_sersic_indices", (n_sersic, n_sersic)
+            )
+            if len(indices) != 2:
+                raise ValueError(
+                    "color_gradient['component_sersic_indices'] must contain two values."
+                )
+            kwargs_source["n_sersic_0"] = float(indices[0])
+            kwargs_source["n_sersic_1"] = float(indices[1])
         else:
             kwargs_source["n_sersic_0"] = galaxy["n_sersic_0"]
             kwargs_source["n_sersic_1"] = galaxy["n_sersic_1"]
         kwargs_source["w0"] = galaxy["w0"]
         kwargs_source["w1"] = galaxy["w1"]
+        if "color_gradient" in colnames:
+            kwargs_source["color_gradient"] = galaxy["color_gradient"]
     if "vel_disp" in colnames:
         kwargs_source["vel_disp"] = float(galaxy["vel_disp"])
     if "stellar_mass" in colnames:

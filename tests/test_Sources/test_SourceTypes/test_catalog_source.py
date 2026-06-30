@@ -12,7 +12,6 @@ from slsim.Sources.SourcePopulation.galaxies import Galaxies
 from slsim.Sources.SourceTypes.single_sersic import SingleSersic
 from slsim.Sources.SourceTypes.double_sersic import DoubleSersic
 from slsim.Sources.SourceTypes.catalog_source import CatalogSource
-import slsim.Sources.SourceTypes.catalog_source as catalog_source_module
 from slsim.Sources.source import Source
 from slsim.Deflectors.deflector import Deflector
 from slsim.Lenses.lens import Lens
@@ -147,7 +146,11 @@ class TestCatalogSource:
             catalog_path=hst_cosmos_path,
             catalog_type="HST_COSMOS",
             band_dependent_color_gradient=True,
-            color_gradient={"strength": 2.0, "reference_band": "F814W"},
+            color_gradient={
+                "grad_color": -0.3,
+                "reference_band": "F814W",
+                "edge_apodization_pixels": 2,
+            },
             **source_dict,
         )
         _, reference_kwargs = source.kwargs_extended_light(band="i")
@@ -157,80 +160,13 @@ class TestCatalogSource:
         np.testing.assert_allclose(
             np.sum(reference_kwargs[0]["image"]), np.sum(reference_image)
         )
-        assert np.all(reference_image >= 0)
+        assert np.all(reference_image[0, :] == 0)
+        assert np.all(reference_image[:, 0] == 0)
 
-        source._color_gradient["strength"] = 0.0
+        source._color_gradient["grad_color"] = 0.0
         np.testing.assert_allclose(
             source._image_for_band(band="i"), source._image_for_band(band=None)
         )
-
-    def test_hst_template_cleaning_rejects_empty_image(self):
-        self.source1.kwargs_extended_light(band="i")
-        with pytest.raises(ValueError, match="no detected central source"):
-            self.source1._clean_hst_template(np.zeros((20, 20)))
-
-    def test_hst_template_cleaning_helpers_cover_quality_failures(self, monkeypatch):
-        self.source1.kwargs_extended_light(band="i")
-
-        self.source1._matched_source = {"NOISE_MEAN": np.nan, "NOISE_VARIANCE": 0}
-        background, noise_rms = self.source1._hst_background_statistics(
-            np.arange(100, dtype=float).reshape(10, 10)
-        )
-        assert np.isfinite(background)
-        assert noise_rms > 0
-
-        assert self.source1._central_source_label(np.zeros((9, 9), dtype=int)) is None
-        distant_label = np.zeros((101, 101), dtype=int)
-        distant_label[0, 0] = 1
-        assert self.source1._central_source_label(distant_label) is None
-
-        edge_mask = np.zeros((9, 9), dtype=bool)
-        edge_mask[0, 4] = True
-        assert not self.source1._has_template_margin(edge_mask)
-
-        self.source1._matched_source = {"NOISE_MEAN": 0.0, "NOISE_VARIANCE": 1.0}
-        off_center_image = np.zeros((31, 31), dtype=float)
-        off_center_image[0, 0] = 100.0
-        with pytest.raises(ValueError, match="no source close"):
-            self.source1._clean_hst_template(off_center_image)
-
-        edge_image = np.zeros((21, 21), dtype=float)
-        edge_image[3, 10] = 100.0
-        with pytest.raises(ValueError, match="too close to the cutout edge"):
-            self.source1._clean_hst_template(edge_image)
-
-        labeled_image = np.zeros((31, 31), dtype=int)
-        labeled_image[14:17, 14:17] = 1
-        monkeypatch.setattr(
-            catalog_source_module, "label", lambda _: (labeled_image, 1)
-        )
-        monkeypatch.setattr(self.source1, "_has_template_margin", lambda _: True)
-        with pytest.raises(ValueError, match="no positive source flux"):
-            self.source1._clean_hst_template(np.zeros((31, 31)))
-
-    def test_hst_template_cleaning_failure_uses_double_sersic(self):
-        source_dict = dict(self.source1.source_dict)
-        source = CatalogSource(
-            angular_size=self.source1.angular_size,
-            e1=self.source1.ellipticity[0],
-            e2=self.source1.ellipticity[1],
-            n_sersic=0.8,
-            cosmo=self.source1._cosmo,
-            catalog_path=hst_cosmos_path,
-            catalog_type="HST_COSMOS",
-            band_dependent_color_gradient=True,
-            color_gradient={"strength": 1.0, "reference_band": "F814W"},
-            **source_dict,
-        )
-
-        def reject_template(_):
-            raise ValueError("synthetic template-quality failure")
-
-        source._clean_hst_template = reject_template
-        source_model, _ = source.kwargs_extended_light(band="i")
-
-        assert source_model == ["SERSIC_ELLIPSE", "SERSIC_ELLIPSE"]
-        assert isinstance(source.double_sersic, DoubleSersic)
 
     def test_hst_chromatic_double_sersic_fallback(self):
         source_dict = {
@@ -251,7 +187,10 @@ class TestCatalogSource:
             catalog_type="HST_COSMOS",
             max_scale=0.1,
             band_dependent_color_gradient=True,
-            color_gradient={"strength": 2.0, "reference_band": "i"},
+            color_gradient={
+                "component_spectral_slopes": [2.0, -1.0],
+                "reference_band": "i",
+            },
             **source_dict,
         )
         source_model, kwargs_light = source.kwargs_extended_light(band="y")
@@ -294,7 +233,7 @@ class TestCatalogSource:
         with pytest.raises(ValueError, match="fallback_double_sersic_kwargs"):
             CatalogSource(
                 catalog_type="HST_COSMOS",
-                color_gradient={"strength": 1.0},
+                color_gradient={"grad_color": -0.1},
                 fallback_double_sersic_kwargs="invalid",
                 **common_kwargs,
                 **source_dict,
