@@ -179,7 +179,8 @@ def radial_color_gradient_image(
     default_reference="F814W",
 ):
     """Apply a d(color)/dlog10(r) gradient to an image and preserve flux.
-        See https://arxiv.org/pdf/1006.4056 for details.
+
+    See https://arxiv.org/pdf/1006.4056 for details.
     """
     if band is None or color_gradient is None:
         return image
@@ -197,9 +198,7 @@ def radial_color_gradient_image(
         get_band_normalized_position,
     )
 
-    band_offset = get_band_normalized_position(
-        band=band, reference_band=reference_band
-    )
+    band_offset = get_band_normalized_position(band=band, reference_band=reference_band)
     if band_offset == 0:
         return image
 

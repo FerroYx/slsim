@@ -61,9 +61,7 @@ def test_component_weights_validation_and_default_reference():
     assert default_reference_band(source_dict) == "i"
 
     assert component_weights_for_band((2, 3), "i") == pytest.approx((0.4, 0.6))
-    assert component_weights_for_band((0.4, 0.6), "i", {}) == pytest.approx(
-        (0.4, 0.6)
-    )
+    assert component_weights_for_band((0.4, 0.6), "i", {}) == pytest.approx((0.4, 0.6))
 
     with pytest.raises(ValueError, match="must be a dictionary"):
         component_weights_for_band((0.4, 0.6), "i", "bad")
@@ -113,13 +111,16 @@ def test_radial_color_gradient_image_preserves_flux_and_reference_band():
     image = np.ones((9, 9))
     color_gradient = {"grad_color": -0.4, "reference_band": "F814W"}
 
-    assert radial_color_gradient_image(
-        image=image,
-        band=None,
-        color_gradient=color_gradient,
-        angular_size=0.3,
-        pixel_scale=0.03,
-    ) is image
+    assert (
+        radial_color_gradient_image(
+            image=image,
+            band=None,
+            color_gradient=color_gradient,
+            angular_size=0.3,
+            pixel_scale=0.03,
+        )
+        is image
+    )
     with pytest.raises(ValueError, match="must be a dictionary"):
         radial_color_gradient_image(
             image=image,
