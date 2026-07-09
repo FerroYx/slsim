@@ -56,9 +56,7 @@ class TestKilonovaEvent:
             "kwargs_kilonova": self.kwargs_kilonova,
         }
 
-        self.source = KilonovaEvent(
-            cosmo=self.cosmo, **kwargs_bns, **self.source_dict
-        )
+        self.source = KilonovaEvent(cosmo=self.cosmo, **kwargs_bns, **self.source_dict)
         self.source_none = KilonovaEvent(
             cosmo=self.cosmo, **kwargs_bns_none, **source_dict2
         )
@@ -118,7 +116,8 @@ class TestKilonovaEvent:
         assert self.source._lightcurve_class._model_parameters["kappa_gamma"] == 10
 
     def test_light_curve_warning(self):
-        """Test that a UserWarning is raised when lightcurve generation fails."""
+        """Test that a UserWarning is raised when lightcurve generation
+        fails."""
 
         class DummyObs:
             def __init__(self, band, **kwargs):

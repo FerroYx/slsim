@@ -15,11 +15,11 @@ class KilonovaEvent(SourceBase):
         lightcurve_time,
         variability_model,
         model_name="mosfit_kilonova",
-        mag_zpsys="AB", 
+        mag_zpsys="AB",
         modeldir=None,
         kwargs_variability=None,
         kwargs_kilonova=None,
-        cosmo=None, 
+        cosmo=None,
         **kwargs,
     ):
         """
@@ -64,7 +64,7 @@ class KilonovaEvent(SourceBase):
         self._mag_zpsys = mag_zpsys
         self._modeldir = modeldir
         self._kwargs_kilonova = kwargs_kilonova or {}
-    
+
     @property
     def light_curve(self):
         """Provides lightcurves of a bns merger in each band."""
@@ -125,17 +125,18 @@ class KilonovaEvent(SourceBase):
         return kwargs_variab_extracted
 
     def point_source_magnitude(self, band, image_observation_times=None):
-        """Get the magnitude of the BNS/kilonova point source in a specific band.
+        """Get the magnitude of the BNS/kilonova point source in a specific
+        band.
 
         :param band: Imaging band.
         :type band: str
-        :param image_observation_times: Image observation times. If None, takes
-            the peak magnitude.
+        :param image_observation_times: Image observation times. If
+            None, takes the peak magnitude.
         :type image_observation_times: array-like or None
         :return: Magnitude of the point source in the specified band.
         :rtype: float or array-like
         """
-        
+
         if not self._variability_computed:
             self._kwargs_variability_model = self.light_curve
 

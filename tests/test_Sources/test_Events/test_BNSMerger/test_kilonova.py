@@ -1,7 +1,8 @@
-import numpy as np  
+import numpy as np
 from slsim.Sources.Events.BNSMerger.kilonova import Kilonova
 import numpy.testing as npt
 import pytest
+
 
 @pytest.fixture
 def Kilonova_class():
@@ -17,6 +18,7 @@ def Kilonova_class():
     )
 
     return KN
+
 
 def test_kilonova_mag(Kilonova_class):
     time = np.array([0.5, 1.0, 2.0])
