@@ -10,6 +10,7 @@ speclite
 pyyaml
 matplotlib
 sncosmo
+redback>=1.17.0
 colossus
 uncertainties
 kcorrect
