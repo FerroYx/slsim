@@ -1,7 +1,7 @@
 from slsim.Sources.SourceTypes.point_plus_extended_source import PointPlusExtendedSource
 from copy import deepcopy
 
-_SUPPORTED_POINT_SOURCES = ["supernova", "quasar", "general_lightcurve"]
+_SUPPORTED_POINT_SOURCES = ["supernova", "quasar", "general_lightcurve", "kilonova"]
 _SUPPORTED_EXTENDED_SOURCES = [
     "single_sersic",
     "double_sersic",
@@ -24,7 +24,7 @@ class Source(object):
          extended source types are 'single_sersic', 'double_sersic', 'catalog_source', and 'interpolated'.
         :type extended_source_type: str or None
         :param point_source_type: Keyword to specify type of point source. Supported point
-         source types are 'supernova', 'quasar', and 'general_lightcurve'.
+         source types are 'supernova', 'quasar', 'general_lightcurve', and 'kilonova'.
         :type point_source_type: str or None
         :param source_dict: Source properties. Can be a dictionary or an Astropy table.
          For a detailed description of this dictionary, please see the documentation for
@@ -61,6 +61,10 @@ class Source(object):
             from slsim.Sources.SourceTypes.general_lightcurve import GeneralLightCurve
 
             self._source = GeneralLightCurve(**source_dict)
+        elif source_type in ["kilonova"]:
+            from slsim.Sources.SourceTypes.kilonova_event import KilonovaEvent
+
+            self._source = KilonovaEvent(**source_dict)
 
         # extended sources
         elif source_type in ["single_sersic"]:
