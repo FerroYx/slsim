@@ -2,11 +2,12 @@ from slsim.Sources.Events.BNSMerger.kilonova import Kilonova
 from slsim.Sources.SourceTypes.kilonova_event import KilonovaEvent
 import slsim.ImageSimulation.image_quality_lenstronomy as iql
 import numpy as np
+import numpy.testing as npt
 import pytest
 from astropy import cosmology
 
 
-class TestKilonovaEvent:
+class TestKilonovaEvent(object):
     def setup_method(self):
         self.cosmo = cosmology.FlatLambdaCDM(H0=70, Om0=0.3)
         self.source_dict = {"z": 0.8, "ra_off": 0.001, "dec_off": 0.005}
@@ -114,6 +115,17 @@ class TestKilonovaEvent:
             == 3000
         )
         assert self.source._lightcurve_class._model_parameters["kappa_gamma"] == 10
+
+        # test specific values of a model lightcurve
+        npt.assert_almost_equal(
+            light_curve["i"]["ps_mag_i"][0], 30.52057182997839, decimal=5
+        )
+        npt.assert_almost_equal(
+            np.min(light_curve["i"]["ps_mag_i"]), 28.330211764355443, decimal=5
+        )
+        npt.assert_almost_equal(
+            light_curve["i"]["ps_mag_i"][-1], 31.496458821405547, decimal=5
+        )
 
     def test_light_curve_warning(self):
         """Test that a UserWarning is raised when lightcurve generation

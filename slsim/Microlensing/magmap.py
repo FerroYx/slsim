@@ -114,6 +114,7 @@ class MagnificationMap(object):
             self.magnifications = (
                 self._microlensing_IPM.magnifications
             )  # based on updated IPM class
+            del self._microlensing_IPM  # delete the IPM object to free up memory
 
     @property
     def mu_ave(self):

@@ -1228,6 +1228,9 @@ def test_point_source_magnitude_microlensing(
         time=time_array
     )
 
+    # verify that magnification maps are generated explicitly at initialization
+    mock_ml_lc_instance.generate_magnification_maps_from_microlensing_params.assert_called_once()
+
     # Check if microlensing_model_class property is set correctly
     assert (
         lens_system.microlensing_model_class(source_index=source_index)
@@ -1347,6 +1350,10 @@ def test_point_source_magnitude_microlensing_defaults(
 
     # update_source_morphology should have been called during the second execution
     mock_instance.update_source_morphology.assert_called_once()
+
+    # Maps are generated once during init and reused from cache on subsequent calls,
+    # not regenerated
+    mock_instance.generate_magnification_maps_from_microlensing_params.assert_called_once()
 
 
 @patch("slsim.Microlensing.lightcurvelensmodel.MicrolensingLightCurveFromLensModel")
