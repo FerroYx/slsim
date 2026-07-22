@@ -27,15 +27,47 @@ except ImportError:
 
 @pytest.fixture
 def pes_lens_instance():
-    path = os.path.dirname(__file__)
-    source_dict = Table.read(
-        os.path.join(path, "../TestData/source_dict_ps.fits"), format="fits"
-    )
-    deflector_dict = Table.read(
-        os.path.join(path, "../TestData/deflector_dict_ps.fits"), format="fits"
-    )
+
+    kwargs_source = {
+        "extended_source_type": "single_sersic",
+        "point_source_type": "quasar",
+        "z": 2,
+        "angular_size": 1,
+        "n_sersic": 2,
+        "e1": 0.1,
+        "e2": -0.1,
+        "mag_g": float(29),
+        "mag_r": float(30),
+        "mag_i": float(29),
+        "mag_z": float(31),
+        "mag_Y": float(32),
+        "ps_mag_g": float(29),
+        "ps_mag_r": float(30),
+        "ps_mag_i": float(29),
+        "ps_mag_z": float(31),
+        "ps_mag_Y": float(32),
+    }
 
     cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+    kwargs_mass = {
+        "vel_disp": 250,
+        "gamma_pl": 2.0,
+        "e1": 0.1,
+        "e2": 0,
+        "mass_type": "EPL",
+    }
+    kwargs_light = {
+        "extended_source_type": "single_sersic",
+        "n_sersic": 2,
+        "angular_size": 0.5,
+        "mag_g": float(29),
+        "mag_r": float(30),
+        "mag_i": float(29),
+        "mag_z": float(31),
+        "mag_Y": float(32),
+        "e1": 0,
+        "e2": 0,
+    }
     while True:
         variable_agn_kwarg_dict = {
             "length_of_light_curve": 500,
@@ -54,15 +86,10 @@ def pes_lens_instance():
         }
         source = Source(
             cosmo=cosmo,
-            point_source_type="quasar",
-            extended_source_type="single_sersic",
             **kwargs_quasar,
-            **source_dict,
+            **kwargs_source,
         )
-        deflector = Deflector(
-            deflector_type="EPL_SERSIC",
-            **deflector_dict,
-        )
+        deflector = Deflector(z=0.2, kwargs_mass=kwargs_mass, kwargs_light=kwargs_light)
         pes_lens = Lens(
             source_class=source,
             deflector_class=deflector,
@@ -173,9 +200,7 @@ def test_opsim_variable_lens_injection(pes_lens_instance):
 def lens_class_instance():
     cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
     path = os.path.dirname(__file__)
-    source_dict1 = Table.read(
-        os.path.join(path, "../TestData/source_supernovae_new.fits"), format="fits"
-    )
+
     deflector_dict = Table.read(
         os.path.join(path, "../TestData/deflector_supernovae_new.fits"), format="fits"
     )
@@ -183,6 +208,15 @@ def lens_class_instance():
     deflector_dict_ = dict(zip(deflector_dict.colnames, deflector_dict[0]))
     gamma_pl = 1.8
     deflector_dict_["gamma_pl"] = gamma_pl
+    source_dict1 = {"z": 1}
+    kwargs_mass = {
+        "vel_disp": 250,
+        "gamma_pl": gamma_pl,
+        "e1": 0.1,
+        "e2": 0,
+        "mass_type": "EPL",
+    }
+    kwargs_light = {}
     while True:
         kwargs_point_extended = {
             "variability_model": "light_curve",
@@ -199,10 +233,7 @@ def lens_class_instance():
             **source_dict1,
             **kwargs_point_extended,
         )
-        deflector = Deflector(
-            deflector_type="EPL",
-            **deflector_dict_,
-        )
+        deflector = Deflector(z=0.2, kwargs_mass=kwargs_mass, kwargs_light=kwargs_light)
 
         lens_class1 = Lens(
             deflector_class=deflector,

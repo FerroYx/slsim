@@ -36,6 +36,7 @@ class PointPlusExtendedSource(PointSource, ExtendedSource):
             self,
             source_type=point_source_type,
             cosmo=cosmo,
+            allow_more_source_dict=True,
             **source_dict,
         )
 
@@ -43,6 +44,7 @@ class PointPlusExtendedSource(PointSource, ExtendedSource):
             self,
             source_type=extended_source_type,
             cosmo=cosmo,
+            allow_more_source_dict=True,
             **source_dict,
         )
 

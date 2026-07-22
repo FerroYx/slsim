@@ -1,14 +1,12 @@
 from astropy.cosmology import FlatLambdaCDM
-from slsim.Deflectors.DeflectorPopulation.all_lens_galaxies import (
-    AllLensGalaxies,
-    fill_table,
+from slsim.Deflectors.DeflectorPopulation.galaxy_deflectors import (
+    GalaxyDeflectors,
 )
 from slsim.Deflectors.MassLightConnection.velocity_dispersion import (
     vel_disp_abundance_matching,
 )
 from slsim.Pipelines.skypy_pipeline import SkyPyPipeline
 from astropy.units import Quantity
-from astropy.table import Table
 import numpy as np
 import pytest
 import copy
@@ -32,9 +30,27 @@ def all_lens_galaxies():
     kwargs_mass2light = {}
     cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
     sky_area = Quantity(value=0.05, unit="deg2")
-    return AllLensGalaxies(
+    return GalaxyDeflectors(
         red_galaxies,
-        blue_galaxies,
+        blue_galaxy_list=blue_galaxies,
+        kwargs_cut=kwargs_deflector_cut,
+        kwargs_mass2light=kwargs_mass2light,
+        cosmo=cosmo,
+        sky_area=sky_area,
+    )
+
+
+@pytest.fixture
+def red_galaxies():
+    galaxy_list = copy.copy(galaxies)
+    red_galaxies = galaxy_list[0]
+    # blue_galaxies = galaxy_list[1]
+    kwargs_deflector_cut = {}
+    kwargs_mass2light = {}
+    cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+    sky_area = Quantity(value=0.05, unit="deg2")
+    return GalaxyDeflectors(
+        red_galaxies,
         kwargs_cut=kwargs_deflector_cut,
         kwargs_mass2light=kwargs_mass2light,
         cosmo=cosmo,
@@ -48,12 +64,6 @@ def test_deflector_number_draw_deflector(all_lens_galaxies):
     deflector = galaxy_pop.draw_deflector()
     assert deflector.redshift != 0
     assert num_deflectors >= 0
-
-
-def test_fill_table():
-    mock_galaxy_list = copy.copy(galaxies)[0]
-    filled_table = fill_table(mock_galaxy_list)
-    assert isinstance(filled_table, Table)
 
 
 def test_vel_disp_abundance_matching():
@@ -87,56 +97,78 @@ def test_all_lens_galaxies_2():
     kwargs_mass2light = {}
     cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
     sky_area = Quantity(value=0.05, unit="deg2")
-    galaxy_class1 = AllLensGalaxies(
+    galaxy_class1 = GalaxyDeflectors(
         red_galaxies,
-        blue_galaxies,
+        blue_galaxy_list=blue_galaxies,
         kwargs_cut=kwargs_deflector_cut,
         kwargs_mass2light=kwargs_mass2light,
         cosmo=cosmo,
         sky_area=sky_area,
         gamma_pl=2.05,
     )
-    galaxy_class2 = AllLensGalaxies(
+    galaxy_class2 = GalaxyDeflectors(
         red_galaxies2,
-        blue_galaxies2,
+        blue_galaxy_list=blue_galaxies2,
         kwargs_cut=kwargs_deflector_cut,
         kwargs_mass2light=kwargs_mass2light,
         cosmo=cosmo,
         sky_area=sky_area,
         gamma_pl={"mean": 2.1, "std_dev": 0.16},
     )
-    galaxy_class3 = AllLensGalaxies(
+    galaxy_class3 = GalaxyDeflectors(
         red_galaxies3,
-        blue_galaxies3,
+        blue_galaxy_list=blue_galaxies3,
         kwargs_cut=kwargs_deflector_cut,
         kwargs_mass2light=kwargs_mass2light,
         cosmo=cosmo,
         sky_area=sky_area,
         gamma_pl={"gamma_min": 1.95, "gamma_max": 2.26},
     )
-    assert galaxy_class1.draw_deflector().halo_properties["gamma_pl"] == 2.05
-    assert 1.6 <= galaxy_class2.draw_deflector().halo_properties["gamma_pl"] <= 2.6
-    assert 1.95 <= galaxy_class3.draw_deflector().halo_properties["gamma_pl"] <= 2.26
+    assert galaxy_class1.draw_deflector().mass_properties["gamma_pl"] == 2.05
+    assert 1.6 <= galaxy_class2.draw_deflector().mass_properties["gamma_pl"] <= 2.6
+    assert 1.95 <= galaxy_class3.draw_deflector().mass_properties["gamma_pl"] <= 2.26
     with pytest.raises(ValueError):
-        AllLensGalaxies(
+        deflectors = GalaxyDeflectors(
             red_galaxies4,
-            blue_galaxies4,
+            blue_galaxy_list=blue_galaxies4,
             kwargs_cut=kwargs_deflector_cut,
             kwargs_mass2light=kwargs_mass2light,
             cosmo=cosmo,
             sky_area=sky_area,
             gamma_pl={"gamma_mi": 1.95, "gamma_ma": 2.26},
         )
+        deflectors.draw_deflector()
     with pytest.raises(ValueError):
-        AllLensGalaxies(
+        GalaxyDeflectors(
             red_galaxies5,
-            blue_galaxies5,
+            blue_galaxy_list=blue_galaxies5,
             kwargs_cut=kwargs_deflector_cut,
             kwargs_mass2light=kwargs_mass2light,
             cosmo=cosmo,
             sky_area=sky_area,
             gamma_pl=[2.1, 0.16],
         )
+        deflectors.draw_deflector()
+
+
+def test_elliptical_galaxies():
+    galaxy_list = copy.copy(galaxies)
+    red_galaxies = copy.copy(galaxy_list[0])
+
+    kwargs_deflector_cut = {}
+    kwargs_mass2light = {}
+    cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+    sky_area = Quantity(value=0.05, unit="deg2")
+    galaxy_class1 = GalaxyDeflectors(
+        red_galaxies,
+        kwargs_cut=kwargs_deflector_cut,
+        kwargs_mass2light=kwargs_mass2light,
+        cosmo=cosmo,
+        sky_area=sky_area,
+        gamma_pl=2.05,
+    )
+
+    assert galaxy_class1.draw_deflector().mass_properties["gamma_pl"] == 2.05
 
 
 if __name__ == "__main__":

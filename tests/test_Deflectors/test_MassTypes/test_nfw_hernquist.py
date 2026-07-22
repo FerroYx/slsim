@@ -1,7 +1,8 @@
-from slsim.Deflectors.DeflectorTypes.nfw_hernquist import NFWHernquist
+from slsim.Deflectors.MassTypes.nfw_hernquist import NFWHernquist
 from astropy.cosmology import FlatLambdaCDM
 import numpy.testing as npt
 from lenstronomy.Cosmo.lens_cosmo import LensCosmo
+from slsim.Sources.source import Source
 
 
 class TestNFWHernquist(object):
@@ -19,29 +20,32 @@ class TestNFWHernquist(object):
     """
 
     def setup_method(self):
+        light = Source(
+            z=0.5,
+            extended_source_type="hernquist",
+            angular_size=0.001 / 4.84813681109536e-06,
+            stellar_mass=1e11,
+            e1=-0.1,
+            e2=0.1,
+            mag_g=20,
+        )
         self.deflector_dict = {
             "halo_mass": 10**13,
-            "halo_mass_acc": 0.0,
             "concentration": 10,
-            "e1_mass": 0.1,
-            "e2_mass": -0.1,
-            "stellar_mass": 10e11,
-            "angular_size": 0.001 / 4.84813681109536e-06,
-            "e1_light": -0.1,
-            "e2_light": 0.1,
-            "z": 0.5,
-            "mag_g": -20,
+            "e1": 0.1,
+            "e2": -0.1,
+            "light": light,
         }
         self.nfw_hernquist = NFWHernquist(**self.deflector_dict)
 
     def test_redshift(self):
-        z = self.nfw_hernquist.redshift
-        assert self.deflector_dict["z"] == z
+        z = self.nfw_hernquist._light.redshift
+        assert self.deflector_dict["light"].redshift == z
 
     def test_halo_properties(self):
-        m_halo, c = self.nfw_hernquist.halo_properties
-        assert m_halo == self.deflector_dict["halo_mass"]
-        assert c == self.deflector_dict["concentration"]
+        kwargs_halo = self.nfw_hernquist.mass_properties
+        assert kwargs_halo["halo_mass"] == self.deflector_dict["halo_mass"]
+        assert kwargs_halo["concentration"] == self.deflector_dict["concentration"]
 
     def test_velocity_dispersion(self):
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
@@ -51,14 +55,14 @@ class TestNFWHernquist(object):
 
     def test_light_model_lenstronomy(self):
         lens_light_model_list, kwargs_lens_light = (
-            self.nfw_hernquist.light_model_lenstronomy(band="g")
+            self.nfw_hernquist._light.kwargs_extended_light(band="g")
         )
         assert len(lens_light_model_list) == 1
 
     def test_mass_model_lenstronomy(self):
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
         lens_cosmo = LensCosmo(
-            cosmo=cosmo, z_lens=self.deflector_dict["z"], z_source=2.0
+            cosmo=cosmo, z_lens=self.deflector_dict["light"].redshift, z_source=2.0
         )
         lens_mass_model_list, kwargs_lens_mass = (
             self.nfw_hernquist.mass_model_lenstronomy(

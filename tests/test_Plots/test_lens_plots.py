@@ -5,9 +5,9 @@ import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 import slsim
-import slsim.Sources as sources
 import slsim.Pipelines as pipelines
-import slsim.Deflectors as deflectors
+from slsim.Sources.SourcePopulation.galaxies import Galaxies
+from slsim.Deflectors.DeflectorPopulation.galaxy_deflectors import GalaxyDeflectors
 
 from astropy.cosmology import FlatLambdaCDM
 from astropy.units import Quantity
@@ -28,15 +28,15 @@ def gg_lens_pop_instance():
         sky_area=sky_area,
         filters=None,
     )
-    lens_galaxies = deflectors.EllipticalLensGalaxies(
-        galaxy_list=galaxy_simulation_pipeline.red_galaxies,
+    lens_galaxies = GalaxyDeflectors(
+        red_galaxy_list=galaxy_simulation_pipeline.red_galaxies,
         kwargs_cut={},
         kwargs_mass2light={},
         cosmo=cosmo,
         sky_area=sky_area,
     )
 
-    source_galaxies = sources.Galaxies(
+    source_galaxies = Galaxies(
         galaxy_list=galaxy_simulation_pipeline.blue_galaxies,
         kwargs_cut={},
         cosmo=cosmo,
@@ -87,20 +87,20 @@ def gg_roman_lens_pop_instance():
         sky_area=sky_area,
         filters=None,
     )
-    lens_galaxies = deflectors.EllipticalLensGalaxies(
-        galaxy_list=galaxy_simulation_pipeline.red_galaxies,
+    lens_galaxies = GalaxyDeflectors(
+        red_galaxy_list=galaxy_simulation_pipeline.red_galaxies,
         kwargs_cut={},
         kwargs_mass2light={},
         cosmo=cosmo,
         sky_area=sky_area,
     )
-    source_galaxies = sources.Galaxies(
+    source_galaxies = Galaxies(
         galaxy_list=galaxy_simulation_pipeline.blue_galaxies,
         kwargs_cut={},
         cosmo=cosmo,
         sky_area=sky_area,
         catalog_type="skypy",
-        source_size=None,
+        size_model=None,
         extended_source_type="single_sersic",
     )
 

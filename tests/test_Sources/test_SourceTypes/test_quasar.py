@@ -42,7 +42,6 @@ class TestQuasar:
             "standard_deviation": 0.9,
         }
         self.kwargs_quasar = {
-            "source_type": "quasar",
             "variability_model": "light_curve",
             "kwargs_variability": {"agn_lightcurve", "i", "r", "F062", "VIS"},
             "agn_driving_variability_model": "bending_power_law",
@@ -53,7 +52,6 @@ class TestQuasar:
         }
 
         kwargs_quasar_none = {
-            "source_type": "quasar",
             "variability_model": "light_curve",
             "kwargs_variability": None,
             "agn_driving_variability_model": "bending_power_law",
@@ -77,10 +75,7 @@ class TestQuasar:
             cosmo=None, **self.kwargs_quasar, **self.source_dict
         )
         self.source_agn_band_error = Quasar(
-            source_dict=self.source_dict3,
-            cosmo=cosmo,
-            **self.kwargs_quasar,
-            **self.source_dict3
+            cosmo=cosmo, **self.kwargs_quasar, **self.source_dict3
         )
 
         self.source_light_curve = Quasar(

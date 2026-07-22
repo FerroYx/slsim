@@ -1,6 +1,7 @@
 import pytest
 
-from slsim.Deflectors.DeflectorTypes.epl_sersic import EPLSersic
+from slsim.Deflectors.MassTypes.epl import EPL
+from slsim.Sources.source import Source
 from astropy.cosmology import FlatLambdaCDM
 from lenstronomy.Cosmo.lens_cosmo import LensCosmo
 
@@ -18,36 +19,41 @@ class TestEPLSersic(object):
     """
 
     def setup_method(self):
-        self.deflector_dict = {
-            "vel_disp": 200,
-            "e1_mass": 0.1,
-            "e2_mass": -0.1,
-            "angular_size": 0.001,
+
+        self.kwargs_source = {
+            "extended_source_type": "single_sersic",
+            "angular_size": 0.1,
             "n_sersic": 1,
-            "e1_light": -0.1,
-            "e2_light": 0.1,
+            "e1": -0.1,
+            "e2": 0.1,
+            "center_x": 0,
+            "center_y": 0,
             "z": 0.5,
         }
+
+        source = Source(**self.kwargs_source)
+
+        self.deflector_dict = {
+            "vel_disp": 200,
+            "e1": 0.1,
+            "e2": -0.1,
+            "gamma_pl": 2,
+        }
         # gamma_pl not given, hence using isothermal
-        self.sie_sersic = EPLSersic(**self.deflector_dict)
+        self.sie_sersic = EPL(light=source, **self.deflector_dict)
 
         self.deflector_dict = {
             "vel_disp": 200,
             "gamma_pl": 2.1,
-            "e1_mass": 0.1,
-            "e2_mass": -0.1,
-            "angular_size": 0.001,
-            "n_sersic": 1,
-            "e1_light": -0.1,
-            "e2_light": 0.1,
-            "z": 0.5,
+            "e1": 0.1,
+            "e2": -0.1,
         }
         # gamma_pl not given, hence using isothermal
-        self.epl_sersic = EPLSersic(**self.deflector_dict)
+        self.epl_sersic = EPL(light=source, **self.deflector_dict)
 
     def test_redshift(self):
-        z = self.sie_sersic.redshift
-        assert self.deflector_dict["z"] == z
+        z = self.sie_sersic._light.redshift
+        assert self.kwargs_source["z"] == z
 
     def test_velocity_dispersion(self):
         vel_disp = self.sie_sersic.velocity_dispersion()
@@ -57,7 +63,7 @@ class TestEPLSersic(object):
         # Should yeld SIE model as gamma = 2
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
         lens_cosmo = LensCosmo(
-            cosmo=cosmo, z_lens=self.sie_sersic.redshift, z_source=2.0
+            cosmo=cosmo, z_lens=self.sie_sersic._light.redshift, z_source=2.0
         )
         lens_mass_model_list, kwargs_lens_mass = self.sie_sersic.mass_model_lenstronomy(
             lens_cosmo=lens_cosmo,
@@ -91,7 +97,7 @@ class TestEPLSersic(object):
         # case when z_source < z_lens
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
         lens_cosmo = LensCosmo(
-            cosmo=cosmo, z_lens=self.sie_sersic.redshift, z_source=0.2
+            cosmo=cosmo, z_lens=self.sie_sersic._light.redshift, z_source=0.2
         )
         lens_mass_model_list, kwargs_lens_mass = self.sie_sersic.mass_model_lenstronomy(
             lens_cosmo=lens_cosmo
@@ -99,36 +105,8 @@ class TestEPLSersic(object):
         assert kwargs_lens_mass[0]["theta_E"] == 0.0
 
     def test_halo_porperties(self):
-        gamma = self.sie_sersic.halo_properties["gamma_pl"]
+        gamma = self.sie_sersic.mass_properties["gamma_pl"]
         assert gamma == 2.0
-
-
-@pytest.fixture
-def gamma_epl_sersic_instance():
-    deflector_dict = {
-        "vel_disp": 200,
-        "gamma_pl": 1.9,
-        "e1_mass": 0.1,
-        "e2_mass": -0.1,
-        "angular_size": 0.001,
-        "n_sersic": 1,
-        "e1_light": -0.1,
-        "e2_light": 0.1,
-        "z": 0.5,
-    }
-    return EPLSersic(**deflector_dict)
-
-
-def test_mass_model_lenstronomy_gamma(gamma_epl_sersic_instance):
-    # case when gamma != 2
-    gamma_epl_sersic = gamma_epl_sersic_instance
-    cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
-    lens_cosmo = LensCosmo(cosmo=cosmo, z_lens=gamma_epl_sersic.redshift, z_source=2.0)
-    lens_mass_model_list, kwargs_lens_mass = gamma_epl_sersic.mass_model_lenstronomy(
-        lens_cosmo=lens_cosmo
-    )
-    assert len(lens_mass_model_list) == 1
-    assert lens_mass_model_list[0] == "EPL"
 
 
 if __name__ == "__main__":

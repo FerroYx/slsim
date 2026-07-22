@@ -90,7 +90,7 @@ class LensPop(LensedPopulationBase):
             else:
                 test_area_ = test_area
             # set a center for the deflector and source
-            _deflector.update_center(deflector_area=0.01)
+            _deflector.update_center(area=0.01)
             _source.update_center(
                 area=test_area_, reference_position=_deflector.deflector_center
             )
@@ -236,7 +236,7 @@ class LensPop(LensedPopulationBase):
             desc="Drawing lens population",
         ):
             _deflector = self._lens_galaxies.draw_deflector()
-            _deflector.update_center(deflector_area=0.01)
+            _deflector.update_center(area=0.01)
             theta_e_infinity = _deflector.theta_e_infinity(cosmo=self.cosmo)
             test_area = area_theta_e_infinity(theta_e_infinity=theta_e_infinity)
             num_sources_tested = self.get_num_sources_tested(

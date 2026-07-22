@@ -41,9 +41,7 @@ class SNIaRate(object):
         self._cosmo = cosmo
         self._z_max = z_max
 
-        self._t_min = self._cosmo.age(
-            z=self._z_max
-        ).to_value()  # Time at redshift z_max
+        self._t_min = self._cosmo.age(self._z_max).to_value()  # Time at redshift z_max
         self._t_0 = self._cosmo.age(0).to_value()  # Time at redshift z = 0
 
         self._denominator = integrate.quad(
