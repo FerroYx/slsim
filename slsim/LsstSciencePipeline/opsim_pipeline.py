@@ -1,6 +1,5 @@
 import numpy as np
 from astropy.table import Table
-import lenstronomy.Util.util as util
 import lenstronomy.Util.kernel_util as kernel_util
 import lenstronomy.Util.data_util as data_util
 
@@ -113,7 +112,6 @@ def opsim_time_series_images_data(
             psf_kernel = kernel_util.kernel_moffat(
                 num_pix=num_pix, delta_pix=delta_pix, fwhm=psf, moffat_beta=moffat_beta
             )
-            psf_kernel = util.array2image(psf_kernel)
 
             psf_kernels.append(psf_kernel)
 

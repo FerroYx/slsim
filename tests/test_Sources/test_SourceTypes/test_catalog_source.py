@@ -255,24 +255,31 @@ def test_source1():
     source2 = Source(extended_source_type="single_sersic", cosmo=cosmo, **source_dict)
 
     # dummy, zero‑mass deflector
+    kwargs_light = {
+        "extended_source_type": "single_sersic",
+        "e1": 0.0,
+        "e2": 0.0,
+        "angular_size": 0.05,
+        "n_sersic": 1.0,
+        "mag_g": 99.0,
+        "mag_r": 99.0,
+        "mag_i": 99.0,
+        "mag_z": 99.0,
+        "mag_y": 99.0,
+    }
+    kwargs_mass = {
+        "mass_type": "EPL",
+        "theta_E": 0.0,
+        "gamma_pl": 2.0,
+        "e1": 0.0,
+        "e2": 0.0,
+    }
     deflector = Deflector(
-        deflector_type="EPL_SERSIC",
-        **{
-            "z": 0.5,
-            "theta_E": 0.0,
-            "e1_light": 0.0,
-            "e2_light": 0.0,
-            "e1_mass": 0.0,
-            "e2_mass": 0.0,
-            "gamma_pl": 2.0,
-            "angular_size": 0.05,
-            "n_sersic": 1.0,
-            "mag_g": 99.0,
-            "mag_r": 99.0,
-            "mag_i": 99.0,
-            "mag_z": 99.0,
-            "mag_y": 99.0,
-        },
+        center_x=0,
+        center_y=0,
+        z=0.5,
+        kwargs_light=kwargs_light,
+        kwargs_mass=kwargs_mass,
     )
 
     lens_class1 = Lens(
@@ -355,23 +362,15 @@ def test_source2():
 
     # dummy, zero‑mass deflector
     deflector = Deflector(
-        deflector_type="EPL_SERSIC",
-        **{
-            "z": 0.5,
+        center_x=0,
+        center_y=0,
+        z=0.5,
+        kwargs_mass={
+            "mass_type": "EPL",
             "theta_E": 0.0,
-            "e1_light": 0.0,
-            "e2_light": 0.0,
-            "e1_mass": 0.0,
-            "e2_mass": 0.0,
             "gamma_pl": 2.0,
-            "angular_size": 0.05,
-            "n_sersic": 1.0,
-            "mag_g": 99.0,
-            "mag_r": 99.0,
-            "mag_i": 99.0,
-            "mag_z": 99.0,
-            "mag_y": 99.0,
         },
+        kwargs_light={},
     )
 
     lens_class1 = Lens(
@@ -446,7 +445,7 @@ def test_galaxies():
         cosmo=cosmo,
         sky_area=sky_area,
         catalog_type="skypy",
-        source_size=None,
+        size_model=None,
         extended_source_type="catalog_source",
         extended_source_kwargs={
             "catalog_path": hst_cosmos_path,

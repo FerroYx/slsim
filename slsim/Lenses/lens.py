@@ -23,7 +23,6 @@ from slsim.ImageSimulation.image_quality_lenstronomy import (
 from scipy.ndimage import label
 
 from slsim.Lenses.lensed_system_base import LensedSystemBase
-from slsim.Deflectors.deflector import JAX_PROFILES
 import pandas as pd
 
 
@@ -548,31 +547,23 @@ class Lens(LensedSystemBase):
 
     @property
     def deflector_redshift(self):
-        """
+        """Either gets the list of redshifts or a single redshift, depending on
+        whether multi-plane is used or not.
 
         :return: lens redshift
-
         """
-        deflector_redshifts = [self.deflector.redshift]
 
         if self.multi_plane or self.source_number > 1:
 
-            if self.deflector.deflector_type in ["NFW_CLUSTER"]:
-
-                if self.deflector.cored_profile:
-                    deflector_redshifts.append(self.deflector.redshift)
-
-                deflector_redshifts.extend(self.deflector.subhalo_redshifts)
-
+            deflector_redshifts = self.deflector.redshift_list
             if self.shear:
                 deflector_redshifts.append(self.deflector.redshift)
 
             if self.convergence:
                 deflector_redshifts.append(self.deflector.redshift)
-
             return deflector_redshifts
         else:
-            return deflector_redshifts[0]
+            return self.deflector.redshift
 
     @property
     def source_redshift_list(self):
@@ -634,7 +625,7 @@ class Lens(LensedSystemBase):
 
         if not hasattr(self, "_theta_E_infinity"):
             self._theta_E_infinity = self.deflector.theta_e_infinity(
-                self.cosmo, multi_plane=self.multi_plane, use_jax=self._use_jax
+                self.cosmo, use_jax=self._use_jax
             )
         return self._theta_E_infinity
 
@@ -646,7 +637,7 @@ class Lens(LensedSystemBase):
         :param source_index: index of the source.
         :return: effective Einstein radius for the lens-source pair.
         """
-        if self.deflector.deflector_type in ["EPL", "EPL_SERSIC"]:
+        if self.deflector.deflector_type in ["EPL"]:
             return self.einstein_radius[source_index]
         else:
             return self.einstein_radius_infinity
@@ -663,9 +654,9 @@ class Lens(LensedSystemBase):
         lens_model_class, kwargs_lens = self.deflector_mass_model_lenstronomy(
             source_index=source_index
         )
-        if self.deflector.deflector_type in ["EPL", "EPL_SERSIC"]:
+        if self.deflector.deflector_type in ["EPL"]:
             kappa_ext_convention = self.los_class.convergence
-            gamma_pl = self.deflector.halo_properties["gamma_pl"]
+            gamma_pl = self.deflector.mass_properties["gamma_pl"]
             theta_E_convention = kwargs_lens[0]["theta_E"]
             if (
                 self.source(source_index).redshift
@@ -1461,12 +1452,7 @@ class Lens(LensedSystemBase):
             z_source = self.source(source_index).redshift
         if hasattr(self, "_lens_mass_model_list") and hasattr(self, "_kwargs_lens"):
             pass
-        elif self.deflector.deflector_type in [
-            "EPL",
-            "EPL_SERSIC",
-            "NFW_HERNQUIST",
-            "NFW_CLUSTER",
-        ]:
+        else:
 
             lens_mass_model_list, kwargs_lens = self.deflector.mass_model_lenstronomy(
                 lens_cosmo=self._lens_cosmo
@@ -1496,12 +1482,6 @@ class Lens(LensedSystemBase):
             self._kwargs_lens = kwargs_lens
             self._lens_mass_model_list = lens_mass_model_list
 
-        else:
-            raise ValueError(
-                "Deflector model %s not supported for lenstronomy model"
-                % self.deflector.deflector_type
-            )
-
         # For significant speedup, use these mass profiles from jaxtronomy
 
         # TODO: replace with change_source_redshift() currently not fully working
@@ -1515,15 +1495,11 @@ class Lens(LensedSystemBase):
         else:
             lens_redshift_list = None
             # For significant speedup, use these mass profiles from jaxtronomy
-            if self._use_jax is True:
-                use_jax = []
-                for profile in self._lens_mass_model_list:
-                    if profile in JAX_PROFILES:
-                        use_jax.append(True)
-                    else:
-                        use_jax.append(False)
-            else:
-                use_jax = False
+            from slsim.Util.lenstronomy_util import jax_usage
+
+            use_jax = jax_usage(
+                use_jax=self._use_jax, lens_mass_model_list=self._lens_mass_model_list
+            )
         lens_model = LensModel(
             lens_model_list=self._lens_mass_model_list,
             cosmo=self.cosmo,
@@ -1554,7 +1530,7 @@ class Lens(LensedSystemBase):
         conventions, which includes extended sources and point sources.
 
         :param band: imaging band
-        :type band: string
+        :type band: str or None
         :param time: time is an image observation time in units of days.
             If None, provides magnitude without variability.
         :param microlensing: if using micro-lensing map to produce the

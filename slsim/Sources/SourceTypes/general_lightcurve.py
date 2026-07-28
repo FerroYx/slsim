@@ -10,7 +10,11 @@ class GeneralLightCurve(SourceBase):
         """
 
 
-        :param MJD: list of times of the recorded magnitudes
+        :param MJD: list of times of the recorded magnitudes, defined in the rest
+         (source) frame relative to time_zero_point, consistent with the convention
+         used by Quasar() and SupernovaEvent() and assumed by
+         Source._image_to_source_time_translation(). If supplying real observer-frame
+         data, divide by (1+z) first.
         :type MJD: array of same length as ps_mag_<band>
         :param variability_model: keyword for variability model to be used. This is an
             input for the Variability class.
@@ -37,7 +41,9 @@ class GeneralLightCurve(SourceBase):
         # These are the keywords that kwargs dict should contain
         self._MJD = MJD
 
-    def point_source_magnitude(self, band, image_observation_times=None):
+    def point_source_magnitude(
+        self, band, image_observation_times=None, at_maximum=False
+    ):
         """Get the magnitude of the point source in a specific band.
 
         :param band: Imaging band

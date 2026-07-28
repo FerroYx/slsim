@@ -12,10 +12,10 @@ class TestDoubleSersic:
             "n_sersic_1": 4,
             "angular_size_0": 0.2,
             "angular_size_1": 0.15,
-            "e1_1": 0.1,
-            "e1_2": 0.002,
-            "e2_1": 0.001,
-            "e2_2": 0.003,
+            "e1_0": 0.1,
+            "e1_1": 0.002,
+            "e2_0": 0.001,
+            "e2_1": 0.003,
             "w0": 0.4,
             "w1": 0.6,
             "mag_i": 23,
@@ -53,8 +53,8 @@ class TestDoubleSersic:
 
         e1_light_source_1_lenstronomy, e2_light_source_1_lenstronomy = (
             ellipticity_slsim_to_lenstronomy(
-                e1_slsim=self.source_dict["e1_1"],
-                e2_slsim=self.source_dict["e2_1"],
+                e1_slsim=self.source_dict["e1_0"],
+                e2_slsim=self.source_dict["e2_0"],
             )
         )
 
@@ -64,8 +64,8 @@ class TestDoubleSersic:
         assert results[1]["R_sersic"] == 0.15
         e1_light_source_2_lenstronomy, e2_light_source_2_lenstronomy = (
             ellipticity_slsim_to_lenstronomy(
-                e1_slsim=self.source_dict["e1_2"],
-                e2_slsim=self.source_dict["e2_2"],
+                e1_slsim=self.source_dict["e1_1"],
+                e2_slsim=self.source_dict["e2_1"],
             )
         )
 
