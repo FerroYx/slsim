@@ -39,14 +39,26 @@ class PointPlusExtendedSources(Galaxies):
         :param extended_source_type: keyword for number of sersic profile to use in source
          light model. accepted kewords: "single_sersic", "double_sersic".
         :param joint_point_source_kwargs: dictionary of keyword arguments for PointSource that are joint among all
-         point sources.
-         For supernova kwargs dict, please see documentation of SupernovaEvent class.
-         For quasar kwargs dict, please see documentation of Quasar class.
-         Eg of supernova kwargs: point_source_kwargs={
-         "variability_model": "light_curve", "kwargs_variability": ["supernovae_lightcurve",
-            "i", "r"], "sn_type": "Ia", "sn_absolute_mag_band": "bessellb",
-            "sn_absolute_zpsys": "ab", "lightcurve_time": np.linspace(-50, 100, 150),
-            "sn_modeldir": None}.
+         point sources. Provides population-level default values applied uniformly
+         to every draw. Any key here may be overridden on a per-object basis by
+         including a same-named column in `point_plus_extended_sources_list` -- the
+         catalog value takes precedence. Note this dict, together with the catalog
+         row, is also shared with the extended-source half of the combined source
+         (see `PointPlusExtendedSource` for how each half reads only its own
+         relevant keys and ignores the rest).
+         For supernova kwargs, please see documentation of SupernovaEvent class (slsim/Sources/SourceTypes/supernova_event.py).
+         For quasar kwargs, please see documentation of Quasar class (slsim/Sources/SourceTypes/quasar.py).
+         Eg of supernova kwargs::
+
+             joint_point_source_kwargs = {
+                 "variability_model": "light_curve",
+                 "kwargs_variability": ["supernovae_lightcurve", "i", "r"],
+                 "sn_type": "Ia",
+                 "sn_absolute_mag_band": "bessellb",
+                 "sn_absolute_zpsys": "ab",
+                 "lightcurve_time": np.linspace(-50, 100, 150),
+                 "sn_modeldir": None,
+             }
         """
         if kwargs_cut is None:
             kwargs_cut = {}
@@ -82,10 +94,12 @@ class PointPlusExtendedSources(Galaxies):
         )
         if kwargs_source is None:
             return None
+        # per-object catalog values override the joint/population-level defaults
+        # on key collision, rather than raising (as a direct double-** unpack would)
+        merged_kwargs = {**self._joint_point_source_kwargs, **kwargs_source}
         source_class = Source(
             cosmo=self._cosmo,
             point_source_type=self._point_source_type,
-            **self._joint_point_source_kwargs,
-            **kwargs_source
+            **merged_kwargs
         )
         return source_class

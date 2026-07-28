@@ -33,7 +33,10 @@ class PointSources(SourcePopBase):
          Supported point source types are "supernova", "quasar", "general_lightcurve".
         :param joint_point_source_kwargs: dictionary of keyword arguments for point sources that are joint. It should
          contain keywords for point_source_type and other keywords associated with
-         point source.
+         point source. Provides population-level default values applied uniformly
+         to every draw. Any key here may be overridden on a per-object basis by
+         including a same-named column in `point_source_list` -- the catalog value
+         takes precedence.
         """
         if joint_point_source_kwargs is None:
             joint_point_source_kwargs = {}
@@ -68,11 +71,13 @@ class PointSources(SourcePopBase):
             z_max=z_max, z_min=z_min, galaxy_index=object_index
         )
 
+        # per-object catalog values override the joint/population-level defaults
+        # on key collision, rather than raising (as a direct double-** unpack would)
+        merged_kwargs = {**self._joint_point_source_kwargs, **point_source}
         source_class = Source(
             cosmo=self._cosmo,
             point_source_type=self._point_source_type,
-            **self._joint_point_source_kwargs,
-            **point_source
+            **merged_kwargs
         )
 
         return source_class

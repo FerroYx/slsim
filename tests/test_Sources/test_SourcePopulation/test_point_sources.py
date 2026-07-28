@@ -59,3 +59,26 @@ class TestPointSources(object):
         )
         point_source = point_sources.draw_source()
         assert isinstance(point_source, Source)
+
+    def test_catalog_overrides_joint_kwargs_on_collision(self):
+        """A catalog column should override a same-named joint kwarg, and
+        should not crash."""
+        sky_area = Quantity(value=0.1, unit="deg2")
+        cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+        catalog = self.quasar_list.copy()
+        catalog["black_hole_mass_exponent"] = 9.0
+        kwargs = {
+            "variability_model": "light_curve",
+            "kwargs_variability": None,
+            "black_hole_mass_exponent": 7.0,
+        }
+        point_sources = PointSources(
+            point_source_list=catalog,
+            cosmo=cosmo,
+            sky_area=sky_area,
+            kwargs_cut={},
+            point_source_type="quasar",
+            joint_point_source_kwargs=kwargs,
+        )
+        source = point_sources.draw_source()
+        assert source.point_source._black_hole_mass_exponent == 9.0

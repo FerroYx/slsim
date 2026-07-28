@@ -9,6 +9,20 @@ class GeneralLightCurve(SourceBase):
     def __init__(self, MJD, variability_model="light_curve", **kwargs):
         """
 
+        Parameters fall into two categories:
+
+        - **Required per-object catalog data** (passed via ``kwargs``/``source_dict``,
+          typically one row of a catalog Table): at minimum ``z`` (redshift) and at
+          least one ``ps_mag_<band>`` entry matching ``MJD`` in length.
+        - **Population-level config** (the explicit named arguments ``MJD`` and
+          ``variability_model``): normally the same for every draw, but may be
+          overridden on a per-object basis by including a same-named column in the
+          input catalog (see `PointSources`/`PointPlusExtendedSources`).
+
+        Unlike `Quasar`, this class does not set ``allow_more_source_dict=True``, so
+        unrecognized/misspelled keys in ``kwargs`` raise a clear error at
+        construction time (consistent with `Quasar` and `SupernovaEvent` after the
+        AGN-parameter transparency pass).
 
         :param MJD: list of times of the recorded magnitudes, defined in the rest
          (source) frame relative to time_zero_point, consistent with the convention
@@ -19,15 +33,13 @@ class GeneralLightCurve(SourceBase):
         :param variability_model: keyword for variability model to be used. This is an
             input for the Variability class.
         :type variability_model: str
-        :param source_dict: Source properties. May be a dictionary or an Astropy table.
-         This table or dict should contain atleast redshift of a supernova, offset from
-         the host if host galaxy is available, and lightcurve in a desired band.
-         eg: data={"z": 0.8, "MJD":
-         np.array([1,2,3,4,5,6,7,8,9]),
-         "ps_mag_i": np.array([15, 16, 17, 18, 19, 20, 21, 22, 23]), "ra_off": 0.001,
-           "dec_off": 0.002}
-        :type source_dict: dict or astropy.table.Table
-        :param kwargs: dictionary of keyword arguments for a source of lightcurve.
+        :param kwargs: required per-object catalog data (dict or one row of an
+         Astropy table). Must contain at least redshift (``z``) and at least one
+         ``ps_mag_<band>`` entry, and may include ``ra_off``/``dec_off`` if a host
+         galaxy is available.
+         eg: {"z": 0.8, "MJD": np.array([1,2,3,4,5,6,7,8,9]),
+         "ps_mag_i": np.array([15, 16, 17, 18, 19, 20, 21, 22, 23]),
+         "ra_off": 0.001, "dec_off": 0.002}
 
         """
 
