@@ -23,7 +23,7 @@ class KilonovaEvent(SourceBase):
         **kwargs,
     ):
         """
-        :param lightcurve_time: Observation time array for the light curve in units of days.
+        :param lightcurve_time: Observation time array for the light curve in [days].
         :type lightcurve_time: array-like
         :param variability_model: Keyword for the variability model to be used. This is an
             input for the Variability class.
@@ -36,16 +36,17 @@ class KilonovaEvent(SourceBase):
         :param modeldir: Directory including files for external kilonova models. This
             option is currently not supported.
         :type modeldir: str or None
-        :param kwargs_variability: Dictionary with bands as strings, each containing
-            input configurations for point source variability.
-        :type kwargs_variability: dict of dict or None
-        :param kwargs_kilonova: Keyword arguments passed to the Kilonova class, such as
-            ejecta_mass, ejecta_velocity, opacity, temperature_floor, and kappa_gamma.
+        :param kwargs_variability: List containing the variability keyword and the
+            bands for which the light curve should be generated.
+        :type kwargs_variability: list or None
+        :param kwargs_kilonova: Keyword arguments passed to the Kilonova class. This may
+            include ejecta_mass in [solar masses], ejecta_velocity in [c], opacity in
+            [cm^2 g^-1], temperature_floor in [K], and kappa_gamma in [cm^2 g^-1].
         :type kwargs_kilonova: dict or None
         :param cosmo: Astropy cosmology instance.
         :type cosmo: `~astropy.cosmology`
         :param kwargs: Keyword arguments passed to the SourceBase class. This may contain
-            source properties such as redshift and offsets from the host galaxy.
+            source properties such as redshift and offsets from the host galaxy in [arcsec].
         :type kwargs: dict
         """
         super().__init__(
@@ -63,7 +64,11 @@ class KilonovaEvent(SourceBase):
         self._model_name = model_name
         self._mag_zpsys = mag_zpsys
         self._modeldir = modeldir
-        self._kwargs_kilonova = kwargs_kilonova or {}
+
+        if kwargs_kilonova is None:
+            self._kwargs_kilonova = {}
+        else:
+            self._kwargs_kilonova = kwargs_kilonova
 
     @property
     def light_curve(self):
@@ -94,7 +99,9 @@ class KilonovaEvent(SourceBase):
                 name = "ps_mag_" + element
                 times = self._lightcurve_time
 
-                # Use the sncosmo band-name mapping since Redback expects registered filter names.
+                # Convert SLSim short band labels, such as "i" and "r", to registered
+                # filter names required by Redback, such as "lssti" and "lsstr".
+                # We reuse the existing SLSim/SNcosmo filter-name helper for this mapping.
                 provided_band = get_sncosmo_filtername(element)
 
                 try:
@@ -130,7 +137,7 @@ class KilonovaEvent(SourceBase):
 
         :param band: Imaging band.
         :type band: str
-        :param image_observation_times: Image observation times. If
+        :param image_observation_times: Image observation times in [days]. If
             None, takes the peak magnitude.
         :type image_observation_times: array-like or None
         :return: Magnitude of the point source in the specified band.

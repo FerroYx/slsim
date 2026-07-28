@@ -7,3 +7,4 @@ pyhalo<=1.4.6
 mcfit
 sncosmo
 stpsf
+redback>=1.17.0

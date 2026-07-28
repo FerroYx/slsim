@@ -38,15 +38,16 @@ class Kilonova:
         :param model_name: The kilonova light curve model to be used. If not provided,
             the default model is the MOSFiT-based kilonova model.
         :type model_name: str
-        :param ejecta_mass: Ejecta masses for the kilonova components.
+        :param ejecta_mass: Ejecta masses for the kilonova components in  [M_sol].
         :type ejecta_mass: array-like or None
-        :param ejecta_velocity: Ejecta velocities for the kilonova components.
+        :param ejecta_velocity: Ejecta velocities for the kilonova components in units of
+            the speed of light [c].
         :type ejecta_velocity: array-like or None
-        :param opacity: Opacities for the kilonova components.
+        :param opacity: Opacities for the kilonova components in [cm^2 g^-1].
         :type opacity: array-like or None
-        :param temperature_floor: Temperature floors for the kilonova components.
+        :param temperature_floor: Temperature floors for the kilonova components in [K].
         :type temperature_floor: array-like or None
-        :param kappa_gamma: Gamma-ray opacity.
+        :param kappa_gamma: Gamma-ray opacity in [cm^2 g^-1].
         :type kappa_gamma: float
         :param mag_zpsys: Optional, AB or Vega (AB default).
         :type mag_zpsys: str
@@ -90,6 +91,8 @@ class Kilonova:
             if values is None:
                 raise ValueError(f"{name} must be provided.")
             if len(values) != 3:
+                # The MOSFiT kilonova model uses three ejecta components.
+                # Each of these parameters must therefore contain three values.
                 raise ValueError(f"{name} must have three components.")
 
         self._model_parameters = {
