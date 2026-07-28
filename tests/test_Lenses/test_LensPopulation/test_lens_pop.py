@@ -447,6 +447,7 @@ def test_supernovae_lens_pop_instance():
             use_jax=use_jax,
         )
 
+
 def test_kilonova_lens_pop_instance():
     cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
     sky_area_1 = Quantity(value=0.1, unit="deg2")
@@ -530,6 +531,7 @@ def test_kilonova_lens_pop_instance():
             cosmo=cosmo,
             use_jax=use_jax,
         )
+
 
 def test_num_lenses_and_sources(gg_lens_pop_instance):
     num_lenses = gg_lens_pop_instance.deflector_number
