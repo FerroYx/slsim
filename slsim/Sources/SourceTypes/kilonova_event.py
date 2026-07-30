@@ -1,4 +1,5 @@
 import warnings
+import numpy as np
 from slsim.Sources.SourceTypes.source_base import SourceBase
 from slsim.Sources.Events.BNSMerger.kilonova import Kilonova
 from slsim.ImageSimulation.image_quality_lenstronomy import (
@@ -110,6 +111,11 @@ class KilonovaEvent(SourceBase):
                         band=provided_band,
                         zpsys=self._mag_zpsys,
                     )
+                    # make sure before and after the event, the flux is zero
+                    magnitudes = np.append(np.inf, magnitudes)
+                    magnitudes = np.append(magnitudes, np.inf)
+                    padded_times = np.append(times[0] - (times[1] - times[0]), times)
+                    padded_times = np.append(padded_times, 2 * times[-1] - times[-2])
                 except Exception as e:
                     warnings.warn(
                         f"Skipping band '{provided_band}': Failed to generate lightcurve. "
@@ -122,7 +128,7 @@ class KilonovaEvent(SourceBase):
                     self.source_dict[name] = float(min(magnitudes))
 
                 kwargs_variab_extracted[element] = {
-                    "MJD": times,
+                    "MJD": padded_times,
                     name: magnitudes,
                 }
         else:

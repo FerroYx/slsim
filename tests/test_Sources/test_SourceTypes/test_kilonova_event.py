@@ -36,7 +36,8 @@ class TestKilonovaEvent(object):
         }
 
         kwargs_bns = {
-            "source_type": "bns_merger",
+            # model type
+            "model_type": "bns_merger",
             "variability_model": "light_curve",
             "kwargs_variability": ["bns_lightcurve", "i", "r"],
             "lightcurve_time": np.linspace(0.1, 10, 50),
@@ -47,7 +48,7 @@ class TestKilonovaEvent(object):
         }
 
         kwargs_bns_none = {
-            "source_type": "bns_merger",
+            "model_type": "bns_merger",
             "variability_model": "light_curve",
             "kwargs_variability": None,
             "lightcurve_time": np.linspace(0.1, 10, 50),
@@ -81,8 +82,8 @@ class TestKilonovaEvent(object):
         assert "ps_mag_i" in light_curve["i"].keys()
         assert "MJD" in light_curve["r"].keys()
         assert "ps_mag_r" in light_curve["r"].keys()
-        assert len(light_curve["i"]["MJD"]) == 50
-        assert len(light_curve["i"]["ps_mag_i"]) == 50
+        assert len(light_curve["i"]["MJD"]) == 52
+        assert len(light_curve["i"]["ps_mag_i"]) == 52
 
         assert not light_curve_none
 
@@ -116,15 +117,19 @@ class TestKilonovaEvent(object):
         )
         assert self.source._lightcurve_class._model_parameters["kappa_gamma"] == 10
 
+        # Check that the flux is zero before and after the modeled light curve.
+        assert np.isinf(light_curve["i"]["ps_mag_i"][0])
+        assert np.isinf(light_curve["i"]["ps_mag_i"][-1])
+
         # test specific values of a model lightcurve
         npt.assert_almost_equal(
-            light_curve["i"]["ps_mag_i"][0], 30.52057182997839, decimal=5
+            light_curve["i"]["ps_mag_i"][1], 30.52057182997839, decimal=5
         )
         npt.assert_almost_equal(
             np.min(light_curve["i"]["ps_mag_i"]), 28.330211764355443, decimal=5
         )
         npt.assert_almost_equal(
-            light_curve["i"]["ps_mag_i"][-1], 31.496458821405547, decimal=5
+            light_curve["i"]["ps_mag_i"][-2], 31.496458821405547, decimal=5
         )
 
     def test_light_curve_warning(self):
