@@ -5,72 +5,73 @@ import pytest
 
 
 @pytest.fixture
-def Kilonova_class():
+def kilonova_parameters():
+    return {
+        "mej_1": 0.01,
+        "mej_2": 0.02,
+        "mej_3": 0.03,
+        "vej_1": 0.1,
+        "vej_2": 0.2,
+        "vej_3": 0.3,
+        "kappa_1": 0.5,
+        "kappa_2": 3.0,
+        "kappa_3": 10.0,
+        "temperature_floor_1": 5000,
+        "temperature_floor_2": 4000,
+        "temperature_floor_3": 3000,
+        "kappa_gamma": 10,
+    }
+
+@pytest.fixture
+def kilonova_class(kilonova_parameters):
     KN = Kilonova(
         redshift=0.1,
         model_name="mosfit_kilonova",
-        ejecta_mass=[0.01, 0.02, 0.03],
-        ejecta_velocity=[0.1, 0.2, 0.3],
-        opacity=[0.5, 3.0, 10.0],
-        temperature_floor=[5000, 4000, 3000],
         mag_zpsys="AB",
         dense_resolution=50,
+        **kilonova_parameters,
     )
 
     return KN
 
 
-def test_kilonova_mag(Kilonova_class):
+def test_kilonova_mag(kilonova_class):
     time = np.array([0.5, 1.0, 2.0])
-    mag = Kilonova_class.get_apparent_magnitude(time=time, band="lsstr")
+    mag = kilonova_class.get_apparent_magnitude(time=time, band="lsstr")
 
     npt.assert_equal(np.shape(mag), np.shape(time))
     npt.assert_(np.all(np.isfinite(mag)))
     npt.assert_(np.all(mag > 0))
 
 
-def test_kilonova_missing_parameters():
-    with pytest.raises(ValueError):
+def test_kilonova_missing_parameters(kilonova_parameters):
+    # Test that omitting a required model parameter raises an error.
+    incomplete_parameters = kilonova_parameters.copy()
+    incomplete_parameters.pop("mej_1")
+
+    with pytest.raises(TypeError):
         Kilonova(
             redshift=0.1,
-            ejecta_velocity=[0.1, 0.2, 0.3],
-            opacity=[0.5, 3.0, 10.0],
-            temperature_floor=[5000, 4000, 3000],
+            **incomplete_parameters,
         )
 
 
-def test_kilonova_parameter_length():
-    with pytest.raises(ValueError):
-        Kilonova(
-            redshift=0.1,
-            ejecta_mass=[0.01, 0.02],
-            ejecta_velocity=[0.1, 0.2, 0.3],
-            opacity=[0.5, 3.0, 10.0],
-            temperature_floor=[5000, 4000, 3000],
-        )
-
-
-def test_kilonova_invalid_model_name():
+def test_kilonova_invalid_model_name(kilonova_parameters):
+    # Test that an unavailable Redback model name raises an error.
     with pytest.raises(ValueError):
         Kilonova(
             redshift=0.1,
             model_name="not_a_kilonova_model",
-            ejecta_mass=[0.01, 0.02, 0.03],
-            ejecta_velocity=[0.1, 0.2, 0.3],
-            opacity=[0.5, 3.0, 10.0],
-            temperature_floor=[5000, 4000, 3000],
+            **kilonova_parameters,
         )
 
 
-def test_kilonova_external_modeldir_not_supported():
+def test_kilonova_external_modeldir_not_supported(kilonova_parameters):
     with pytest.raises(NotImplementedError):
         Kilonova(
             redshift=0.1,
-            ejecta_mass=[0.01, 0.02, 0.03],
-            ejecta_velocity=[0.1, 0.2, 0.3],
-            opacity=[0.5, 3.0, 10.0],
-            temperature_floor=[5000, 4000, 3000],
             modeldir="some/path",
+            **kilonova_parameters,
         )
 
 

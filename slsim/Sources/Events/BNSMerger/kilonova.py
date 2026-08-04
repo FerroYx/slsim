@@ -21,11 +21,19 @@ class Kilonova:
     def __init__(
         self,
         redshift,
+        mej_1,
+        mej_2,
+        mej_3,
+        vej_1,
+        vej_2,
+        vej_3,
+        kappa_1,
+        kappa_2,
+        kappa_3,
+        temperature_floor_1,
+        temperature_floor_2,
+        temperature_floor_3,
         model_name="mosfit_kilonova",
-        ejecta_mass=None,
-        ejecta_velocity=None,
-        opacity=None,
-        temperature_floor=None,
         kappa_gamma=10,
         mag_zpsys="AB",
         cosmo=cosmology.FlatLambdaCDM(H0=70, Om0=0.3),
@@ -35,20 +43,38 @@ class Kilonova:
         """
         :param redshift: The redshift of the kilonova source.
         :type redshift: float
+
+        :param mej_1: Ejecta mass of the first kilonova component in [M_sun].
+        :type mej_1: float
+        :param mej_2: Ejecta mass of the second kilonova component in [M_sun].
+        :type mej_2: float
+        :param mej_3: Ejecta mass of the third kilonova component in [M_sun].
+        :type mej_3: float
+        :param vej_1: Ejecta velocity of the first component in units of the
+            speed of light [c].
+        :type vej_1: float
+        :param vej_2: Ejecta velocity of the second component in units of the
+            speed of light [c].
+        :type vej_2: float
+        :param vej_3: Ejecta velocity of the third component in units of the
+            speed of light [c].
+        :type vej_3: float
+        :param kappa_1: Opacity of the first component in [cm^2 g^-1].
+        :type kappa_1: float
+        :param kappa_2: Opacity of the second component in [cm^2 g^-1].
+        :type kappa_2: float
+        :param kappa_3: Opacity of the third component in [cm^2 g^-1].
+        :type kappa_3: float
+        :param temperature_floor_1: Temperature floor of the first component in [K].
+        :type temperature_floor_1: float
+        :param temperature_floor_2: Temperature floor of the second component in [K].
+        :type temperature_floor_2: float
+        :param temperature_floor_3: Temperature floor of the third component in [K].
+        :type temperature_floor_3: float
+
         :param model_name: The kilonova light curve model to be used. If not provided,
             the default model is the MOSFiT-based kilonova model.
         :type model_name: str
-        :param ejecta_mass: Ejecta masses for the kilonova components in  [M_sol].
-        :type ejecta_mass: array-like or None
-        :param ejecta_velocity: Ejecta velocities for the kilonova components in units of
-            the speed of light [c].
-        :type ejecta_velocity: array-like or None
-        :param opacity: Opacities for the kilonova components in [cm^2 g^-1].
-        :type opacity: array-like or None
-        :param temperature_floor: Temperature floors for the kilonova components in [K].
-        :type temperature_floor: array-like or None
-        :param kappa_gamma: Gamma-ray opacity in [cm^2 g^-1].
-        :type kappa_gamma: float
         :param mag_zpsys: Optional, AB or Vega (AB default).
         :type mag_zpsys: str
         :param cosmo: Cosmology for luminosity distance calculation.
@@ -80,34 +106,19 @@ class Kilonova:
         self._cosmo = cosmo
         self._kwargs = kwargs
 
-        parameter_groups = {
-            "ejecta_mass": ejecta_mass,
-            "ejecta_velocity": ejecta_velocity,
-            "opacity": opacity,
-            "temperature_floor": temperature_floor,
-        }
-
-        for name, values in parameter_groups.items():
-            if values is None:
-                raise ValueError(f"{name} must be provided.")
-            if len(values) != 3:
-                # The MOSFiT kilonova model uses three ejecta components.
-                # Each of these parameters must therefore contain three values.
-                raise ValueError(f"{name} must have three components.")
-
         self._model_parameters = {
-            "mej_1": ejecta_mass[0],
-            "mej_2": ejecta_mass[1],
-            "mej_3": ejecta_mass[2],
-            "vej_1": ejecta_velocity[0],
-            "vej_2": ejecta_velocity[1],
-            "vej_3": ejecta_velocity[2],
-            "kappa_1": opacity[0],
-            "kappa_2": opacity[1],
-            "kappa_3": opacity[2],
-            "temperature_floor_1": temperature_floor[0],
-            "temperature_floor_2": temperature_floor[1],
-            "temperature_floor_3": temperature_floor[2],
+            "mej_1": mej_1,
+            "mej_2": mej_2,
+            "mej_3": mej_3,
+            "vej_1": vej_1,
+            "vej_2": vej_2,
+            "vej_3": vej_3,
+            "kappa_1": kappa_1,
+            "kappa_2": kappa_2,
+            "kappa_3": kappa_3,
+            "temperature_floor_1": temperature_floor_1,
+            "temperature_floor_2": temperature_floor_2,
+            "temperature_floor_3": temperature_floor_3,
             "kappa_gamma": kappa_gamma,
         }
 
