@@ -22,6 +22,7 @@ def kilonova_parameters():
         "kappa_gamma": 10,
     }
 
+
 @pytest.fixture
 def kilonova_class(kilonova_parameters):
     KN = Kilonova(
