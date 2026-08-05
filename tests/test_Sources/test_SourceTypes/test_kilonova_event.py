@@ -28,10 +28,18 @@ class TestKilonovaEvent(object):
         }
 
         self.kwargs_kilonova = {
-            "ejecta_mass": [0.01, 0.02, 0.03],
-            "ejecta_velocity": [0.1, 0.2, 0.3],
-            "opacity": [0.5, 3.0, 10.0],
-            "temperature_floor": [5000, 4000, 3000],
+            "mej_1": 0.01, 
+            "mej_2": 0.02, 
+            "mej_3": 0.03,
+            "vej_1": 0.1,
+            "vej_2": 0.2, 
+            "vej_3": 0.3,
+            "kappa_1": 0.5,
+            "kappa_2": 3.0,
+            "kappa_3": 10.0,
+            "temperature_floor_1": 5000,
+            "temperature_floor_2": 4000,
+            "temperature_floor_3": 3000,
             "kappa_gamma": 10,
         }
 
