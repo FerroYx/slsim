@@ -55,10 +55,11 @@ class SNIaRate(object):
         :return: redshift at time t [float]
         """
         if not hasattr(self, "_age_inv"):
-            z_array = np.linspace(0, self._z_max, 100)
+            z_array = np.linspace(0, self._z_max, 500)
             z_array = z_array[::-1]
             t_array = self._cosmo.age(z_array).to_value()
-            self._age_inv = interp.interp1d(t_array, z_array, fill_value="extrapolate")
+            # Use Pchip instead of interp1d to have smooth interpolation.
+            self._age_inv = interp.PchipInterpolator(t_array, z_array, extrapolate=True)
         return self._age_inv(t).item()
 
     def _numerator_integrand(self, t_d, t):

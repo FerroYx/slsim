@@ -52,6 +52,7 @@ class PointSources(SourcePopBase):
             object_list=point_source_list,
             cosmo=cosmo,
             sky_area=sky_area,
+            kwargs_cut=kwargs_cut,
             point_source_type=point_source_type,
         )
 

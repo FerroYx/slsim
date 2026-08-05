@@ -70,7 +70,7 @@ def deflector_dict_from_table(
         center_x = table["center_x"]
         center_y = table["center_y"]
     else:
-        center_x, center_y = None, None
+        center_x, center_y = 0, 0
     z = kwargs_light.pop("z")
     return z, center_x, center_y, kwargs_mass, kwargs_light
 

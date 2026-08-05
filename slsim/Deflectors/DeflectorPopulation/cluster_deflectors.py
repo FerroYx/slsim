@@ -1,23 +1,21 @@
 import numpy as np
-import numpy.random as random
+from numpy import random
 from slsim.Lenses.selection import object_cut
 from slsim.Deflectors.MassLightConnection.richness2mass import mass_richness_relation
 from slsim.Halos.halo_population import gene_e_ang_halo
-
 from slsim.Deflectors.DeflectorPopulation.deflectors_base import DeflectorsBase
 from slsim.Deflectors.deflector_group import DeflectorGroup
 from slsim.Deflectors.deflector_util import (
     deflector_dict_from_table,
     set_colossus_cosmo,
 )
-
 from lenstronomy.Util.param_util import phi_q2_ellipticity
 from astropy import units as u
 from astropy.table import hstack
 from scipy.spatial.distance import cdist
 
 
-class ClusterDeflectors(object):
+class ClusterDeflectors:
     """Class describing cluster lens model with a NFW profile for the dark
     matter halo and EPL profile for the subhalos (cluster members). It makes
     use of a group/cluster catalog and a group/cluster member catalog (e.g.
@@ -145,8 +143,8 @@ class ClusterDeflectors(object):
 
         kwargs_mass_list = [kwargs_mass]
         kwargs_light_list = [kwargs_light]
-        center_x_deflector_list = [0]
-        center_y_deflector_list = [0]
+        center_x_deflector_list = [center_x]
+        center_y_deflector_list = [center_y]
 
         members = self._draw_members(
             deflector["cluster_id"],
@@ -345,11 +343,8 @@ class ClusterDeflectors(object):
             raise ValueError("cluster_id is mandatory in cluster catalog")
         if "z" not in column_names:
             raise ValueError("redshift is mandatory in cluster catalog")
-        if "halo_mass" not in column_names:
-            if "richness" not in column_names:
-                raise ValueError(
-                    "richness or halo_mass is mandatory in cluster catalog"
-                )
+        if "halo_mass" not in column_names and "richness" not in column_names:
+            raise ValueError("richness or halo_mass is mandatory in cluster catalog")
 
     @staticmethod
     def _preprocess_members(cluster_list, members_list):

@@ -153,9 +153,12 @@ class SupernovaEvent(SourceBase):
                     )
                     continue
 
-                # If successful, store the magnitudes
-                if name not in self.source_dict:
-                    self.source_dict[name] = float(min(magnitudes))
+                # If successful, store the magnitudes. The light curve is infinite
+                # wherever the supernova has no flux, so a peak magnitude only
+                # exists if something finite is left.
+                peak_magnitude = np.nanmin(magnitudes)
+                if name not in self.source_dict and np.isfinite(peak_magnitude):
+                    self.source_dict[name] = float(peak_magnitude)
 
                 kwargs_variab_extracted[element] = {
                     "MJD": padded_times,

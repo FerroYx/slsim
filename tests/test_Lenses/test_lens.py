@@ -1656,8 +1656,8 @@ def test_image_observer_times(supernovae_lens_instance):
     dt_days = supernova_lens.image_observer_times(t_obs=t_obs)
     dt_days2 = supernova_lens.image_observer_times(t_obs=t_obs2)
     arrival_times = supernova_lens.point_source_arrival_times()[0]
-    observer_times = (t_obs - arrival_times - np.max(arrival_times))[:, np.newaxis]
-    observer_times2 = (t_obs2[:, np.newaxis] - arrival_times - np.max(arrival_times)).T
+    observer_times = (t_obs - arrival_times + np.min(arrival_times))[:, np.newaxis]
+    observer_times2 = (t_obs2[:, np.newaxis] - arrival_times + np.min(arrival_times)).T
     npt.assert_almost_equal(dt_days, observer_times, decimal=5)
     npt.assert_almost_equal(dt_days2, observer_times2, decimal=5)
 
