@@ -9,7 +9,7 @@ scipy
 colossus
 speclite
 pyyaml
-matplotlib
+matplotlib==3.11.1
 uncertainties
 kcorrect
 tqdm

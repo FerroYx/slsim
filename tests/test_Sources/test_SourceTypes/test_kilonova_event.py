@@ -28,11 +28,11 @@ class TestKilonovaEvent(object):
         }
 
         self.kwargs_kilonova = {
-            "mej_1": 0.01, 
-            "mej_2": 0.02, 
+            "mej_1": 0.01,
+            "mej_2": 0.02,
             "mej_3": 0.03,
             "vej_1": 0.1,
-            "vej_2": 0.2, 
+            "vej_2": 0.2,
             "vej_3": 0.3,
             "kappa_1": 0.5,
             "kappa_2": 3.0,

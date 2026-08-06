@@ -64,10 +64,10 @@ class Kilonova:
             speed of light [c], affecting its expansion and photon diffusion
             timescale.
         :type vej_1: float
-        :param vej_2: Expansion velocity of model component 2, with the same 
+        :param vej_2: Expansion velocity of model component 2, with the same
             definition and units as ``vej_1``.
         :type vej_2: float
-        :param vej_3: Expansion velocity of model component 3, with the same 
+        :param vej_3: Expansion velocity of model component 3, with the same
             definition and units as ``vej_1``.
         :type vej_3: float
         :param kappa_1: Effective gray opacity of model component 1 in
@@ -80,21 +80,21 @@ class Kilonova:
         :param kappa_3: Effective gray opacity of model component 3, with the
             same definition and units as ``kappa_1``.
         :type kappa_3: float
-        :param temperature_floor_1: Minimum effective photospheric temperature of model 
+        :param temperature_floor_1: Minimum effective photospheric temperature of model
             component 1 in [K], affecting its late-time spectral evolution.
         :type temperature_floor_1: float
-        :param temperature_floor_2: Minimum effective photospheric temperature of model 
+        :param temperature_floor_2: Minimum effective photospheric temperature of model
             component 2, with the same definition and units as ``temperature_floor_1``.
         :type temperature_floor_2: float
-        :param temperature_floor_3: Minimum effective photospheric temperature of model 
+        :param temperature_floor_3: Minimum effective photospheric temperature of model
             component 3, with the same definition and units as ``temperature_floor_1``.
         :type temperature_floor_3: float
 
         :param model_name: The kilonova light curve model to be used. If not provided,
             the default model is the MOSFiT-based kilonova model.
         :type model_name: str
-        :param kappa_gamma: Gamma-ray opacity shared by all three model components 
-            in [cm^2 g^-1], controlling the trapping and escape of high-energy radiation 
+        :param kappa_gamma: Gamma-ray opacity shared by all three model components
+            in [cm^2 g^-1], controlling the trapping and escape of high-energy radiation
             from radioactive decay.
         :type kappa_gamma: float
         :param mag_zpsys: Optional, AB or Vega (AB default).
@@ -109,8 +109,8 @@ class Kilonova:
 
         if modeldir is not None:
             raise NotImplementedError(
-                    "Only built-in Redback kilonova models are currently supported. "
-                    "External kilonova model files are not supported."
+                "Only built-in Redback kilonova models are currently supported. "
+                "External kilonova model files are not supported."
             )
 
         if not hasattr(kilonova_models, model_name):
