@@ -23,7 +23,7 @@ from slsim.Sources.SourcePopulation.galaxies import convert_catalog_to_source
 from slsim.Deflectors import deflector_util
 
 
-plt.rcParams['text.usetex'] = False
+plt.rcParams["text.usetex"] = False
 
 
 @pytest.fixture
