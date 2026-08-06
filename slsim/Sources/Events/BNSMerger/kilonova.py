@@ -16,6 +16,12 @@ class Kilonova:
     default, the MOSFiT-based kilonova model is used. Information about
     Redback can be found at
     https://redback.readthedocs.io/en/latest/.
+
+    Following the GW170817 three-component convention, components 1, 2,
+    and 3 can represent the blue, purple, and red ejecta components when
+    assigned low, intermediate, and high opacities, respectively. This
+    correspondence is not enforced, and users may specify the parameters
+    of each component independently.
     """
 
     def __init__(
@@ -44,37 +50,53 @@ class Kilonova:
         :param redshift: The redshift of the kilonova source.
         :type redshift: float
 
-        :param mej_1: Ejecta mass of the first kilonova component in [M_sun].
+        :param mej_1: Ejecta mass of model component 1 in [M_sun], which
+            sets the amount of radiating material and affecting the photon diffusion
+            timescale.
         :type mej_1: float
-        :param mej_2: Ejecta mass of the second kilonova component in [M_sun].
+        :param mej_2: Ejecta mass of model component 2, with the same
+            definition and units as ``mej_1``.
         :type mej_2: float
-        :param mej_3: Ejecta mass of the third kilonova component in [M_sun].
+        :param mej_3: Ejecta mass of model component 3, with the same
+            definition and units as ``mej_1``.
         :type mej_3: float
-        :param vej_1: Ejecta velocity of the first component in units of the
-            speed of light [c].
+        :param vej_1: Expansion velocity of model component 1 in units of the
+            speed of light [c], affecting its expansion and photon diffusion
+            timescale.
         :type vej_1: float
-        :param vej_2: Ejecta velocity of the second component in units of the
-            speed of light [c].
+        :param vej_2: Expansion velocity of model component 2, with the same 
+            definition and units as ``vej_1``.
         :type vej_2: float
-        :param vej_3: Ejecta velocity of the third component in units of the
-            speed of light [c].
+        :param vej_3: Expansion velocity of model component 3, with the same 
+            definition and units as ``vej_1``.
         :type vej_3: float
-        :param kappa_1: Opacity of the first component in [cm^2 g^-1].
+        :param kappa_1: Effective gray opacity of model component 1 in
+            [cm^2 g^-1], controlling how readily radiation escapes from the
+            ejecta.
         :type kappa_1: float
-        :param kappa_2: Opacity of the second component in [cm^2 g^-1].
+        :param kappa_2: Effective gray opacity of model component 2, with the
+            same definition and units as ``kappa_1``.
         :type kappa_2: float
-        :param kappa_3: Opacity of the third component in [cm^2 g^-1].
+        :param kappa_3: Effective gray opacity of model component 3, with the
+            same definition and units as ``kappa_1``.
         :type kappa_3: float
-        :param temperature_floor_1: Temperature floor of the first component in [K].
+        :param temperature_floor_1: Minimum effective photospheric temperature of model 
+            component 1 in [K], affecting its late-time spectral evolution.
         :type temperature_floor_1: float
-        :param temperature_floor_2: Temperature floor of the second component in [K].
+        :param temperature_floor_2: Minimum effective photospheric temperature of model 
+            component 2, with the same definition and units as ``temperature_floor_1``.
         :type temperature_floor_2: float
-        :param temperature_floor_3: Temperature floor of the third component in [K].
+        :param temperature_floor_3: Minimum effective photospheric temperature of model 
+            component 3, with the same definition and units as ``temperature_floor_1``.
         :type temperature_floor_3: float
 
         :param model_name: The kilonova light curve model to be used. If not provided,
             the default model is the MOSFiT-based kilonova model.
         :type model_name: str
+        :param kappa_gamma: Gamma-ray opacity shared by all three model components 
+            in [cm^2 g^-1], controlling the trapping and escape of high-energy radiation 
+            from radioactive decay.
+        :type kappa_gamma: float
         :param mag_zpsys: Optional, AB or Vega (AB default).
         :type mag_zpsys: str
         :param cosmo: Cosmology for luminosity distance calculation.
@@ -86,19 +108,19 @@ class Kilonova:
         """
 
         if modeldir is not None:
-            # external kilonova model
             raise NotImplementedError(
-                "External kilonova model files are not supported yet."
+                    "Only built-in Redback kilonova models are currently supported. "
+                    "External kilonova model files are not supported."
             )
-        else:
-            # use Redback built-in kilonova model, e.g. mosfit_kilonova
-            if not hasattr(kilonova_models, model_name):
-                raise ValueError(
-                    f"{model_name} is not available in "
-                    "redback.transient_models.kilonova_models."
-                )
-            else:
-                self._model = getattr(kilonova_models, model_name)
+
+        if not hasattr(kilonova_models, model_name):
+            raise ValueError(
+                f"Unsupported kilonova model '{model_name}'. "
+                "The model must be available in "
+                "redback.transient_models.kilonova_models."
+            )
+
+        self._model = getattr(kilonova_models, model_name)
 
         self._model_name = model_name
         self._redshift = redshift
