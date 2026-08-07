@@ -62,7 +62,8 @@ class SourceBase(ABC):
         :type stellar_mass: None or float
         :param vel_disp: velocity dispersion [km/s]
         :type vel_disp: float or None
-        :param kwargs: ps_mag_<band> keyword arguments and mag_<band> to store magnitudes for different bands
+        :param kwargs: ps_mag_<band>, mag_<band> keyword arguments to store apparent magnitudes and
+         M_<band> to store absolute magnitudes for different bands
         :type kwargs: dict or astropy.table.Table
         :param allow_more_source_dict: if True, will not check for consistency of the dictionary with what is required.
          This is due to Extended+Point source models
@@ -92,15 +93,19 @@ class SourceBase(ABC):
         self.source_dict = kwargs
         if not allow_more_source_dict:
             for key in self.source_dict:
-                if key.startswith("ps_mag_") or key.startswith("mag_"):
+                if (
+                    key.startswith("ps_mag_")
+                    or key.startswith("mag_")
+                    or key.startswith("M_")
+                ):
                     pass
                 elif key in _SUPPORTED_KEYS:
                     pass
                 else:
                     raise ValueError(
                         "Dictionary in Source class has invalid arguments. "
-                        "Key %s is not part of ps_mag_<band> and mag_<band> or the supported keys %s."
-                        % (key, _SUPPORTED_KEYS)
+                        "Key %s is not part of ps_mag_<band>, mag_<band> and M_<band> "
+                        "or the supported keys %s." % (key, _SUPPORTED_KEYS)
                     )
 
         self._variability_bands = (

@@ -17,6 +17,8 @@ from slsim.Pipelines.roman_speclite import configure_roman_filters
 from slsim.Pipelines.roman_speclite import filter_names
 import speclite
 
+plt.rcParams["text.usetex"] = False
+
 
 @pytest.fixture
 def gg_lens_pop_instance():

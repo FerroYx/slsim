@@ -1,8 +1,3 @@
-import numpy as np
-
-if not hasattr(np, "trapezoid"):
-    np.trapezoid = np.trapz
-
 from astropy import cosmology
 from redback.transient_models import kilonova_models
 

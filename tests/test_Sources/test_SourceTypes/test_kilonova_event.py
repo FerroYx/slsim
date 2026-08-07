@@ -63,7 +63,7 @@ class TestKilonovaEvent(object):
             "model_name": "mosfit_kilonova",
             "mag_zpsys": "AB",
             "modeldir": None,
-            "kwargs_kilonova": self.kwargs_kilonova,
+            "kwargs_kilonova": None,
         }
 
         self.source = KilonovaEvent(cosmo=self.cosmo, **kwargs_bns, **self.source_dict)
