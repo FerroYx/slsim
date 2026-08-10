@@ -1,4 +1,4 @@
-_SUPPORTED_POINT_SOURCES = ["supernova", "quasar", "general_lightcurve"]
+_SUPPORTED_POINT_SOURCES = ["supernova", "quasar", "general_lightcurve", "kilonova"]
 
 
 class PointSource(object):
@@ -25,6 +25,10 @@ class PointSource(object):
             from slsim.Sources.SourceTypes.general_lightcurve import GeneralLightCurve
 
             self._point_source = GeneralLightCurve(**source_dict)
+        elif source_type in ["kilonova"]:
+            from slsim.Sources.SourceTypes.kilonova_event import KilonovaEvent
+
+            self._point_source = KilonovaEvent(**source_dict)
         else:
             raise ValueError(
                 "Point source type %s not supported. Chose among %s."

@@ -448,6 +448,91 @@ def test_supernovae_lens_pop_instance():
         )
 
 
+def test_kilonova_lens_pop_instance():
+    cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+    sky_area_1 = Quantity(value=0.1, unit="deg2")
+    sky_area_pop = Quantity(value=0.1, unit="deg2")
+
+    kwargs_deflector_cut = {"band": "g", "band_max": 23, "z_min": 0.01, "z_max": 2.5}
+    kwargs_source_cut = {"z_min": 0.1, "z_max": 5.0}
+
+    time_range = np.linspace(0.1, 30, 50)
+
+    lens_galaxies_1 = GalaxyDeflectors(
+        red_galaxy_list=galaxy_simulation_pipeline.red_galaxies,
+        kwargs_cut=kwargs_deflector_cut,
+        kwargs_mass2light={},
+        cosmo=cosmo,
+        sky_area=sky_area_1,
+    )
+
+    kilonova_data_1 = Table(
+        {
+            "z": [0.8, 1.0, 1.2],
+            "ra_off": [0.001, 0.001, 0.001],
+            "dec_off": [0.005, 0.005, 0.005],
+            "ps_mag_i": [28.3, 28.5, 28.7],
+            "ps_mag_r": [28.0, 28.2, 28.4],
+        }
+    )
+
+    kwargs_kilonova = {
+        "ejecta_mass": [0.01, 0.02, 0.03],
+        "ejecta_velocity": [0.1, 0.2, 0.3],
+        "opacity": [0.5, 3.0, 10.0],
+        "temperature_floor": [5000, 4000, 3000],
+        "kappa_gamma": 10,
+    }
+
+    point_source_kwargs = {
+        "variability_model": "light_curve",
+        "kwargs_variability": ["kilonova_lightcurve", "i", "r"],
+        "lightcurve_time": time_range,
+        "model_name": "mosfit_kilonova",
+        "mag_zpsys": "AB",
+        "modeldir": None,
+        "kwargs_kilonova": kwargs_kilonova,
+    }
+    source_galaxies_1 = PointPlusExtendedSources(
+        point_plus_extended_sources_list=kilonova_data_1,
+        cosmo=cosmo,
+        sky_area=sky_area_1,
+        kwargs_cut=kwargs_source_cut,
+        point_source_type="kilonova",
+        extended_source_type=None,
+        joint_point_source_kwargs=point_source_kwargs,
+    )
+
+    ps_lens_pop_1 = LensPop(
+        deflector_population=lens_galaxies_1,
+        source_population=source_galaxies_1,
+        cosmo=cosmo,
+        sky_area=sky_area_pop,
+        use_jax=use_jax,
+    )
+    # drawing population
+    kwargs_lens_cuts = {}
+    ps_lens_population_1 = ps_lens_pop_1.draw_population(
+        speed_factor=1, kwargs_lens_cuts=kwargs_lens_cuts
+    )
+    ps_lens_population_1_speed = ps_lens_pop_1.draw_population(
+        speed_factor=10, kwargs_lens_cuts=kwargs_lens_cuts
+    )
+    kwargs_lens_cut = {}
+    ps_lens_class = ps_lens_pop_1.select_lens_at_random(**kwargs_lens_cut)
+    assert isinstance(ps_lens_class, Lens)
+    assert ps_lens_class._source[0].source_type == "point_source"
+    assert "z" in kilonova_data_1.colnames
+    assert abs(len(ps_lens_population_1) - len(ps_lens_population_1_speed)) <= 12
+    with pytest.raises(ValueError):
+        LensPop(
+            deflector_population=lens_galaxies_1,
+            source_population=source_galaxies_1,
+            cosmo=cosmo,
+            use_jax=use_jax,
+        )
+
+
 def test_num_lenses_and_sources(gg_lens_pop_instance):
     num_lenses = gg_lens_pop_instance.deflector_number
     num_sources = gg_lens_pop_instance.source_number

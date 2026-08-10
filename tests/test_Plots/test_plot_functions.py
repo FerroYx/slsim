@@ -88,6 +88,8 @@ def quasar_lens_pop_instance():
 
 
 def test_create_image_montage_from_image_list(quasar_lens_pop_instance):
+    plt.rcParams["text.usetex"] = False
+
     lens_class = quasar_lens_pop_instance
     image = sharp_image(
         lens_class=lens_class,
