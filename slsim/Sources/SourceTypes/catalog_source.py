@@ -266,10 +266,10 @@ class CatalogSource(SourceBase):
             "n_sersic_1": 1.0,
             "w0": 0.4,
             "w1": 0.6,
+            "e1_0": self._e1,
+            "e2_0": self._e2,
             "e1_1": self._e1,
             "e2_1": self._e2,
-            "e1_2": self._e1,
-            "e2_2": self._e2,
         }
         fallback_kwargs.update(self._fallback_double_sersic_kwargs or {})
         fallback_kwargs["color_gradient"] = self._color_gradient
