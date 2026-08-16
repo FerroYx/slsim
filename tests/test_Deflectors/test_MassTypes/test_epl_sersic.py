@@ -107,5 +107,6 @@ class TestEPLSersic(object):
         gamma = self.sie_sersic.mass_properties["gamma_pl"]
         assert gamma == 2.0
 
+
 if __name__ == "__main__":
     pytest.main()

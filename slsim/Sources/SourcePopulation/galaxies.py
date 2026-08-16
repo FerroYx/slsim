@@ -393,9 +393,7 @@ def convert_catalog_to_source(
                 ellipticity0 = eccentricity(q=axis_ratio_0)
             elif "ellipticity" in colnames or "e" in colnames:
                 ellipticity0 = (
-                    galaxy["ellipticity"]
-                    if "ellipticity" in colnames
-                    else galaxy["e"]
+                    galaxy["ellipticity"] if "ellipticity" in colnames else galaxy["e"]
                 )
             else:
                 raise ValueError(
@@ -429,9 +427,7 @@ def convert_catalog_to_source(
                 ellipticity1 = eccentricity(q=axis_ratio_1)
             elif "ellipticity" in colnames or "e" in colnames:
                 ellipticity1 = (
-                    galaxy["ellipticity"]
-                    if "ellipticity" in colnames
-                    else galaxy["e"]
+                    galaxy["ellipticity"] if "ellipticity" in colnames else galaxy["e"]
                 )
             else:
                 raise ValueError(
