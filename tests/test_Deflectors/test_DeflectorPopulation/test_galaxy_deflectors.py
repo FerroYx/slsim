@@ -217,9 +217,7 @@ def test_foreground_color_gradient_rejects_unsupported_light_type():
             sky_area=Quantity(value=0.05, unit="deg2"),
             catalog_type=None,
             light_type="catalog_source",
-            foreground_color_gradient={
-                "component_spectral_slopes": [2.0, -1.0]
-            },
+            foreground_color_gradient={"component_spectral_slopes": [2.0, -1.0]},
         )
 
 
