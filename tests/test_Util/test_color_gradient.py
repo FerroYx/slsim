@@ -48,6 +48,9 @@ def test_attach_foreground_deflector_color_gradient_adds_table_columns():
     assert table["w0"][0] == pytest.approx(0.4)
     assert table["w1"][0] == pytest.approx(0.6)
 
+    unchanged = Table({"mag_i": [20.0]})
+    assert attach_foreground_deflector_color_gradient(unchanged, None) is unchanged
+
     with pytest.raises(ValueError, match="must be a dictionary"):
         attach_foreground_deflector_color_gradient(table, "bad")
     with pytest.raises(ValueError, match="two values"):

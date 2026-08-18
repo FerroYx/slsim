@@ -208,6 +208,21 @@ def test_galaxy_deflectors_foreground_color_gradient():
     assert component_flux_fraction(kwargs_y) > component_flux_fraction(kwargs_g)
 
 
+def test_foreground_color_gradient_rejects_unsupported_light_type():
+    with pytest.raises(ValueError, match="requires a single_sersic or double_sersic"):
+        GalaxyDeflectors(
+            foreground_test_galaxy_table(),
+            kwargs_mass2light={},
+            cosmo=FlatLambdaCDM(H0=70, Om0=0.3),
+            sky_area=Quantity(value=0.05, unit="deg2"),
+            catalog_type=None,
+            light_type="catalog_source",
+            foreground_color_gradient={
+                "component_spectral_slopes": [2.0, -1.0]
+            },
+        )
+
+
 def foreground_test_galaxy_table():
     return Table(
         {
