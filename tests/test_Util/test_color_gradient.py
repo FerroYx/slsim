@@ -87,7 +87,7 @@ def test_component_weights_validation_and_default_reference():
         observatory_class=DummyObservatory,
         bands=["ZW1", "ZW2"],
     )
-    with pytest.raises(ValueError, match="reference band wavelength"):
+    with pytest.raises(ValueError, match="neither an explicitly configured"):
         component_weights_for_band(
             (0.4, 0.6),
             "i",

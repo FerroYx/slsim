@@ -501,6 +501,13 @@ def _double_sersic_source_kwargs(
     if "angular_size_0" in colnames and "angular_size_1" in colnames:
         kwargs_double_sersic["angular_size_0"] = galaxy["angular_size_0"]
         kwargs_double_sersic["angular_size_1"] = galaxy["angular_size_1"]
+    elif all(key in colnames for key in ("a0", "b0", "a1", "b1")):
+        kwargs_double_sersic["angular_size_0"] = average_angular_size(
+            a=galaxy["a0"], b=galaxy["b0"]
+        )
+        kwargs_double_sersic["angular_size_1"] = average_angular_size(
+            a=galaxy["a1"], b=galaxy["b1"]
+        )
     elif "angular_size" in colnames or catalog_type is not None:
         angular_size, _ = _galaxy_size(
             galaxy,
@@ -518,13 +525,6 @@ def _double_sersic_source_kwargs(
         )
         kwargs_double_sersic["angular_size_1"] = angular_size * float(
             radius_factors[1]
-        )
-    elif all(key in colnames for key in ("a0", "b0", "a1", "b1")):
-        kwargs_double_sersic["angular_size_0"] = average_angular_size(
-            a=galaxy["a0"], b=galaxy["b0"]
-        )
-        kwargs_double_sersic["angular_size_1"] = average_angular_size(
-            a=galaxy["a1"], b=galaxy["b1"]
         )
     else:
         raise ValueError(
