@@ -467,6 +467,19 @@ def test_double_sersic_catalog_component_defaults_and_validation():
             cosmo=FlatLambdaCDM(H0=70, Om0=0.3),
         )
 
+    with pytest.raises(
+        ValueError, match="Cannot determine DoubleSersic component sizes"
+    ):
+        convert_catalog_to_source(
+            {
+                **common,
+                "n_sersic_0": 1.0,
+                "n_sersic_1": 4.0,
+            },
+            extended_source_type="double_sersic",
+            catalog_type=None,
+        )
+
     with pytest.raises(ValueError, match="component_sersic_indices"):
         convert_catalog_to_source(
             {

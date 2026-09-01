@@ -94,6 +94,23 @@ def test_component_weights_validation_and_default_reference():
             {"component_spectral_slopes": [1.0, 0.0], "reference_band": "ZW1"},
         )
 
+    register_observatory(
+        name="NonPositiveReferenceWavelengthObs",
+        observatory_class=DummyObservatory,
+        bands=["NPW0", "NPW1"],
+        speclite_fmt=None,
+        effective_wavelengths={"NPW0": 0.0, "NPW1": 1.0},
+    )
+    with pytest.raises(ValueError, match="reference band wavelength must be positive"):
+        component_weights_for_band(
+            (0.4, 0.6),
+            "NPW1",
+            {
+                "component_spectral_slopes": [1.0, 0.0],
+                "reference_band": "NPW0",
+            },
+        )
+
 
 def test_radial_color_gradient_image_preserves_flux_and_reference_band():
     image = np.ones((9, 9))

@@ -286,6 +286,16 @@ def test_band_wavelength_helpers_cover_hst_and_custom_registry_fallback():
     with pytest.raises(ValueError, match="not recognised"):
         get_band_central_wavelength("UnknownBand")
 
+    register_observatory(
+        name="NonPositiveWavelengthTestObs",
+        observatory_class=DummyObservatory,
+        bands=["NPW-band", "positive-band"],
+        speclite_fmt=None,
+        effective_wavelengths={"NPW-band": 0.0, "positive-band": 1.0},
+    )
+    with pytest.raises(ValueError, match="effective wavelengths must be positive"):
+        get_band_log_wavelength_ratio("NPW-band", reference_band="positive-band")
+
 
 if __name__ == "__main__":
     pytest.main()
