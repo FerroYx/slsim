@@ -522,10 +522,12 @@ def _double_sersic_source_kwargs(
         kwargs_double_sersic["angular_size_1"] = angular_size * float(radius_factors[1])
     else:
         raise ValueError(
-            "Cannot determine DoubleSersic component sizes: provide both "
-            "('angular_size_0', 'angular_size_1'), all of "
-            "('a0', 'b0', 'a1', 'b1'), a usable 'angular_size', or set "
-            f"catalog_type. Available galaxy_list columns are {colnames}."
+            "Cannot determine DoubleSersic component sizes. Provide one of: "
+            "(1) both 'angular_size_0' and 'angular_size_1'; "
+            "(2) all four axis fields 'a0', 'b0', 'a1', and 'b1'; "
+            "(3) a shared 'angular_size'; or "
+            "(4) a catalog_type from which the shared size can be inferred. "
+            f"Available galaxy_list columns are {colnames}."
         )
 
     if "n_sersic_0" in colnames and "n_sersic_1" in colnames:
