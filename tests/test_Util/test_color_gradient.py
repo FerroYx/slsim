@@ -5,7 +5,6 @@ from slsim.Util.color_gradient import (
     attach_foreground_deflector_color_gradient,
     component_weights_for_band,
     default_reference_band,
-    edge_apodized_image,
     radial_color_gradient_image,
 )
 from slsim.ImageSimulation.image_quality_lenstronomy import register_observatory
@@ -94,20 +93,6 @@ def test_component_weights_validation_and_default_reference():
             "i",
             {"component_spectral_slopes": [1.0, 0.0], "reference_band": "ZW1"},
         )
-
-
-def test_edge_apodized_image_only_tapers_edges():
-    image = np.ones((7, 7))
-    np.testing.assert_allclose(edge_apodized_image(image, edge_width=0), image)
-    default_tapered = edge_apodized_image(image)
-    assert default_tapered[0, 0] == 0
-
-    tapered = edge_apodized_image(image, edge_width=2)
-
-    assert np.all(tapered[0, :] == 0)
-    assert np.all(tapered[:, 0] == 0)
-    assert tapered[3, 3] == pytest.approx(1.0)
-    assert tapered[1, 3] > tapered[0, 3]
 
 
 def test_radial_color_gradient_image_preserves_flux_and_reference_band():

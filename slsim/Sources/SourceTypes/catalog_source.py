@@ -3,10 +3,7 @@ from slsim.Sources.SourceTypes.single_sersic import SingleSersic
 from slsim.Sources.SourceTypes.source_base import SourceBase
 from slsim.Sources.SourceCatalogues.CosmosWebCatalog import galaxy_match as CosmosWeb
 from slsim.Sources.SourceCatalogues.HSTCosmosCatalog import galaxy_match as HSTCosmos
-from slsim.Util.color_gradient import (
-    edge_apodized_image,
-    radial_color_gradient_image,
-)
+from slsim.Util.color_gradient import radial_color_gradient_image
 from lenstronomy.Util.param_util import ellipticity2phi_q
 
 CATALOG_TYPES = ["HST_COSMOS, COSMOS_WEB"]
@@ -120,12 +117,15 @@ class CatalogSource(SourceBase):
             if catalog_type != "HST_COSMOS":
                 raise ValueError(
                     "band_dependent_color_gradient is currently supported only "
-                    "for HST_COSMOS."
+                    "for catalog_type='HST_COSMOS'; received "
+                    f"catalog_type={catalog_type!r}."
                 )
             if not isinstance(self._color_gradient, dict):
                 raise ValueError(
                     "color_gradient must be a dictionary when "
-                    "band_dependent_color_gradient is enabled."
+                    "band_dependent_color_gradient is enabled; received "
+                    f"{self._color_gradient!r} (type "
+                    f"{type(self._color_gradient).__name__})."
                 )
             if self._fallback_double_sersic_kwargs is not None and not isinstance(
                 self._fallback_double_sersic_kwargs, dict
@@ -206,13 +206,6 @@ class CatalogSource(SourceBase):
                 "Alternatively, enable sersic_fallback to use a single sersic whenever the matching fails."
             )
 
-        if self._band_dependent_color_gradient and self._image_list is not None:
-            if not hasattr(self, "_chromatic_template"):
-                edge_width = self._color_gradient.get("edge_apodization_pixels")
-                self._chromatic_template = edge_apodized_image(
-                    self._image_list[0], edge_width=edge_width
-                )
-
         if band is None:
             mag_source = 1
         else:
@@ -238,7 +231,7 @@ class CatalogSource(SourceBase):
         """Return the catalog image, optionally with HST chromatic
         morphology."""
         if self._band_dependent_color_gradient:
-            image = self._chromatic_template
+            image = self._image_list[0]
         else:
             image = self._select_image_from_band(band)
 

@@ -4,7 +4,7 @@ import numpy as np
 def default_reference_band(source_dict, default="i"):
     """Choose the available source band closest to a default reference band."""
     from slsim.ImageSimulation.image_quality_lenstronomy import (
-        get_band_normalized_position,
+        get_band_log_wavelength_ratio,
     )
 
     available_bands = [
@@ -16,7 +16,7 @@ def default_reference_band(source_dict, default="i"):
         return default
 
     positions = [
-        abs(get_band_normalized_position(band=band, reference_band=default))
+        abs(get_band_log_wavelength_ratio(band=band, reference_band=default))
         for band in available_bands
     ]
     return available_bands[int(np.argmin(positions))]
@@ -89,11 +89,11 @@ def component_weights_for_band(
         )
 
     from slsim.ImageSimulation.image_quality_lenstronomy import (
-        get_band_central_wavelength,
+        get_band_effective_wavelength,
     )
 
-    wavelength = get_band_central_wavelength(band)
-    reference_wavelength = get_band_central_wavelength(reference_band)
+    wavelength = get_band_effective_wavelength(band)
+    reference_wavelength = get_band_effective_wavelength(reference_band)
     if reference_wavelength <= 0:
         raise ValueError("The reference band wavelength must be positive.")
 
@@ -144,32 +144,6 @@ def attach_foreground_deflector_color_gradient(
     return galaxy_table
 
 
-def edge_apodized_image(image, edge_width=None):
-    """Return image multiplied by a cosine taper at the cutout edges."""
-    image = np.asarray(image, dtype=float)
-    if edge_width is None:
-        edge_width = max(1, min(image.shape) // 20)
-    edge_width = int(edge_width)
-    if edge_width <= 0:
-        return image
-
-    y_grid, x_grid = np.indices(image.shape, dtype=float)
-    distance_to_edge = np.minimum.reduce(
-        [
-            x_grid,
-            y_grid,
-            image.shape[1] - 1 - x_grid,
-            image.shape[0] - 1 - y_grid,
-        ]
-    )
-    mask = np.ones_like(image, dtype=float)
-    edge_region = distance_to_edge < edge_width
-    mask[edge_region] = 0.5 * (
-        1 - np.cos(np.pi * distance_to_edge[edge_region] / edge_width)
-    )
-    return image * mask
-
-
 def radial_color_gradient_image(
     image,
     band,
@@ -195,10 +169,12 @@ def radial_color_gradient_image(
 
     reference_band = color_gradient.get("reference_band") or default_reference
     from slsim.ImageSimulation.image_quality_lenstronomy import (
-        get_band_normalized_position,
+        get_band_log_wavelength_ratio,
     )
 
-    band_offset = get_band_normalized_position(band=band, reference_band=reference_band)
+    band_offset = get_band_log_wavelength_ratio(
+        band=band, reference_band=reference_band
+    )
     if band_offset == 0:
         return image
 

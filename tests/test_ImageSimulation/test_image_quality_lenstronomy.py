@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from slsim.ImageSimulation.image_quality_lenstronomy import (
     check_speclite_name,
     get_speclite_filtername,
@@ -9,7 +10,8 @@ from slsim.ImageSimulation.image_quality_lenstronomy import (
     register_observatory,
     get_all_supported_bands,
     get_band_central_wavelength,
-    get_band_normalized_position,
+    get_band_effective_wavelength,
+    get_band_log_wavelength_ratio,
 )
 
 
@@ -251,32 +253,35 @@ def test_get_all_supported_bands_contains_defaults():
 
 
 def test_default_band_wavelength_ordering():
+    assert get_band_effective_wavelength("g") == pytest.approx(
+        get_band_central_wavelength("g")
+    )
     assert get_band_central_wavelength("g") < get_band_central_wavelength("i")
     assert get_band_central_wavelength("F106") < get_band_central_wavelength("F184")
     assert get_band_central_wavelength("VIS") < get_band_central_wavelength("H")
-    assert get_band_normalized_position("F184", reference_band="g") > 0
+    assert get_band_log_wavelength_ratio("F184", reference_band="g") > 0
 
 
 def test_band_wavelength_helpers_cover_hst_and_custom_registry_fallback():
     assert get_band_central_wavelength("F814W") == pytest.approx(0.805)
-    assert get_band_normalized_position("F814W", reference_band="F814W") == 0
+    assert get_band_log_wavelength_ratio("F814W", reference_band="F814W") == 0
 
     register_observatory(
         name="WavelengthTestObs",
         observatory_class=DummyObservatory,
-        bands=["W1", "W2", "W3"],
+        bands=["bessell-B", "bessell-V", "bessell-R"],
     )
-    assert get_band_central_wavelength("W1") == 0.0
-    assert get_band_central_wavelength("W2") == 0.5
-    assert get_band_normalized_position("W3", reference_band="W1") == 1.0
-
-    register_observatory(
-        name="SingleBandTestObs",
-        observatory_class=DummyObservatory,
-        bands=["OnlyBand"],
+    assert get_band_central_wavelength("bessell-B") < get_band_central_wavelength(
+        "bessell-R"
     )
-    assert get_band_central_wavelength("OnlyBand") == 0.0
-    assert get_band_normalized_position("OnlyBand") == 0.0
+    assert get_band_log_wavelength_ratio(
+        "bessell-R", reference_band="bessell-B"
+    ) == pytest.approx(
+        np.log(
+            get_band_central_wavelength("bessell-R")
+            / get_band_central_wavelength("bessell-B")
+        )
+    )
 
     with pytest.raises(ValueError, match="not recognised"):
         get_band_central_wavelength("UnknownBand")

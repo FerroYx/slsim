@@ -149,7 +149,6 @@ class TestCatalogSource:
             color_gradient={
                 "grad_color": -0.3,
                 "reference_band": "F814W",
-                "edge_apodization_pixels": 2,
             },
             **source_dict,
         )
@@ -160,8 +159,7 @@ class TestCatalogSource:
         np.testing.assert_allclose(
             np.sum(reference_kwargs[0]["image"]), np.sum(reference_image)
         )
-        assert np.all(reference_image[0, :] == 0)
-        assert np.all(reference_image[:, 0] == 0)
+        np.testing.assert_allclose(reference_image, source._image_list[0])
 
         source._color_gradient["grad_color"] = 0.0
         np.testing.assert_allclose(
@@ -220,14 +218,16 @@ class TestCatalogSource:
 
         cosmos_web_kwargs = dict(common_kwargs)
         cosmos_web_kwargs["catalog_path"] = cosmos_web_path
-        with pytest.raises(ValueError, match="only for HST_COSMOS"):
+        with pytest.raises(
+            ValueError, match="received catalog_type='COSMOS_WEB'"
+        ):
             CatalogSource(
                 catalog_type="COSMOS_WEB",
                 **cosmos_web_kwargs,
                 **source_dict,
             )
 
-        with pytest.raises(ValueError, match="color_gradient must be a dictionary"):
+        with pytest.raises(ValueError, match=r"received None \(type NoneType\)"):
             CatalogSource(catalog_type="HST_COSMOS", **common_kwargs, **source_dict)
 
         with pytest.raises(ValueError, match="fallback_double_sersic_kwargs"):

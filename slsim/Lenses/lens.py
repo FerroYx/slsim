@@ -1381,6 +1381,11 @@ class Lens(LensedSystemBase):
             lens_light_model_list,
             kwargs_lens_light,
         ) = self.deflector.light_model_lenstronomy(band=band)
+        # Some light classes expose their internal model list directly.  Work
+        # with copies here so adding field galaxies does not mutate the
+        # deflector and accumulate models across repeated/band-dependent calls.
+        lens_light_model_list = list(lens_light_model_list)
+        kwargs_lens_light = list(kwargs_lens_light)
         # list of
 
         # field galaxies
@@ -1388,8 +1393,8 @@ class Lens(LensedSystemBase):
             field_galaxies_lens_model_list, kwargs_field_galaxies = (
                 self.field_galaxy_light_model_lenstronomy(band=band)
             )
-            lens_light_model_list += field_galaxies_lens_model_list
-            kwargs_lens_light += kwargs_field_galaxies
+            lens_light_model_list.extend(field_galaxies_lens_model_list)
+            kwargs_lens_light.extend(kwargs_field_galaxies)
 
         kwargs_model = {
             "lens_light_model_list": lens_light_model_list,

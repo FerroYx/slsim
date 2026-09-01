@@ -72,14 +72,21 @@ def test_light2mass():
     npt.assert_almost_equal(kwargs_mass_epl["theta_E"], 1, decimal=5)
 
 
-def test_light2mass_uses_first_double_sersic_component_ellipticity():
+def test_light2mass_uses_effective_double_sersic_ellipticity():
     kwargs_mass = deflector_util.light2mass(
-        {"e1_0": 0.2, "e2_0": -0.1},
+        {
+            "e1_0": 0.2,
+            "e2_0": -0.1,
+            "e1_1": -0.1,
+            "e2_1": 0.3,
+            "w0": 0.25,
+            "w1": 0.75,
+        },
         mass_type="EPL",
         halo_dict={"theta_E": 1, "gamma_pl": 2},
         light2mass_e_scaling=1,
         light2mass_e_scatter=0,
     )
 
-    npt.assert_almost_equal(kwargs_mass["e1"], 0.2)
-    npt.assert_almost_equal(kwargs_mass["e2"], -0.1)
+    npt.assert_almost_equal(kwargs_mass["e1"], -0.025)
+    npt.assert_almost_equal(kwargs_mass["e2"], 0.2)

@@ -479,6 +479,35 @@ def test_double_sersic_catalog_component_defaults_and_validation():
             catalog_type=None,
         )
 
+    with pytest.raises(ValueError, match="missing reference-band flux weights"):
+        convert_catalog_to_source(
+            {
+                "z": 0.5,
+                "e1": 0.1,
+                "e2": 0.0,
+                "angular_size_0": 0.2,
+                "angular_size_1": 0.6,
+                "n_sersic_0": 1.0,
+                "n_sersic_1": 4.0,
+            },
+            extended_source_type="double_sersic",
+            catalog_type=None,
+        )
+
+    with pytest.raises(ValueError, match="color_gradient.*must be a dictionary"):
+        convert_catalog_to_source(
+            {
+                **common,
+                "angular_size_0": 0.2,
+                "angular_size_1": 0.6,
+                "n_sersic_0": 1.0,
+                "n_sersic_1": 4.0,
+                "color_gradient": "invalid",
+            },
+            extended_source_type="double_sersic",
+            catalog_type=None,
+        )
+
 
 def test_down_sample_to_dc2():
     galaxy_pop = Table(
