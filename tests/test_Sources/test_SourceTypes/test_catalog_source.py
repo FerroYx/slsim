@@ -218,9 +218,7 @@ class TestCatalogSource:
 
         cosmos_web_kwargs = dict(common_kwargs)
         cosmos_web_kwargs["catalog_path"] = cosmos_web_path
-        with pytest.raises(
-            ValueError, match="received catalog_type='COSMOS_WEB'"
-        ):
+        with pytest.raises(ValueError, match="received catalog_type='COSMOS_WEB'"):
             CatalogSource(
                 catalog_type="COSMOS_WEB",
                 **cosmos_web_kwargs,
