@@ -203,7 +203,10 @@ class Deflector(object):
         :type band: str
         :return: lens_light_model_list, kwargs_lens_light
         """
-        return self.light.kwargs_extended_light(band=band)
+        light_model_list, kwargs_light_list = self.light.kwargs_extended_light(
+            band=band
+        )
+        return list(light_model_list), list(kwargs_light_list)
 
     @property
     def angular_size_light(self):

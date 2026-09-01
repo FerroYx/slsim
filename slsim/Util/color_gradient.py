@@ -2,7 +2,23 @@ import numpy as np
 
 
 def default_reference_band(source_dict, default="i"):
-    """Choose the available source band closest to a default reference band."""
+    """Select the available magnitude band nearest a preferred reference band.
+
+    Bands are inferred from ``mag_<band>`` keys in ``source_dict``. The band
+    closest to ``default`` in logarithmic effective-wavelength space is
+    returned, matching the model's power-law wavelength dependence. If no
+    magnitude band is available, ``default`` is returned unchanged.
+
+    :param source_dict: Source parameters that may contain magnitude entries
+        such as ``mag_g``, ``mag_i``, or ``mag_F158``.
+    :type source_dict: dict or mapping
+    :param default: Preferred reference band and fallback when no magnitude
+        bands are available.
+    :type default: str
+    :return: Available band with the smallest absolute
+        ``log(lambda_band / lambda_default)``, or ``default`` when none exists.
+    :rtype: str
+    """
     from slsim.ImageSimulation.image_quality_lenstronomy import (
         get_band_log_wavelength_ratio,
     )
