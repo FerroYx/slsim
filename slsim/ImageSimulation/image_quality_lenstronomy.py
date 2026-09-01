@@ -283,9 +283,10 @@ def get_all_supported_bands():
 def get_band_effective_wavelength(band):
     """Return the throughput-weighted effective wavelength of a band.
 
-    The registered speclite response is used when available. Roman and HST
-    bands that are not shipped by speclite use explicitly configured fallback
-    values. Band-list position is deliberately not used as a wavelength proxy.
+    The registered speclite response is used when available. Roman and
+    HST bands that are not shipped by speclite use explicitly configured
+    fallback values. Band-list position is deliberately not used as a
+    wavelength proxy.
 
     :param band: Imaging band name.
     :type band: str
@@ -297,9 +298,7 @@ def get_band_effective_wavelength(band):
         return _ADDITIONAL_BAND_EFFECTIVE_WAVELENGTH_MICRON[band]
 
     obs_name = get_observatory(band)
-    configured_wavelengths = _OBSERVATORY_REGISTRY[obs_name][
-        "effective_wavelengths"
-    ]
+    configured_wavelengths = _OBSERVATORY_REGISTRY[obs_name]["effective_wavelengths"]
     if band in configured_wavelengths:
         return float(configured_wavelengths[band])
 
@@ -321,8 +320,9 @@ def get_band_central_wavelength(band):
 def get_band_log_wavelength_ratio(band, reference_band):
     """Return ``log(lambda_band / lambda_reference)``.
 
-    Both wavelengths are throughput-weighted effective wavelengths. This is the
-    chromatic coordinate used by the local power-law SED approximation.
+    Both wavelengths are throughput-weighted effective wavelengths. This
+    is the chromatic coordinate used by the local power-law SED
+    approximation.
     """
     wavelength = get_band_effective_wavelength(band)
     reference_wavelength = get_band_effective_wavelength(reference_band)

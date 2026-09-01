@@ -483,9 +483,7 @@ def _double_sersic_source_kwargs(
                 )
             elif "ellipticity" in colnames or "e" in colnames:
                 ellipticity = (
-                    galaxy["ellipticity"]
-                    if "ellipticity" in colnames
-                    else galaxy["e"]
+                    galaxy["ellipticity"] if "ellipticity" in colnames else galaxy["e"]
                 )
             else:
                 raise ValueError(
@@ -520,12 +518,8 @@ def _double_sersic_source_kwargs(
             raise ValueError(
                 "color_gradient['component_radius_factors'] must contain two values."
             )
-        kwargs_double_sersic["angular_size_0"] = angular_size * float(
-            radius_factors[0]
-        )
-        kwargs_double_sersic["angular_size_1"] = angular_size * float(
-            radius_factors[1]
-        )
+        kwargs_double_sersic["angular_size_0"] = angular_size * float(radius_factors[0])
+        kwargs_double_sersic["angular_size_1"] = angular_size * float(radius_factors[1])
     else:
         raise ValueError(
             "Cannot determine DoubleSersic component sizes: provide both "
@@ -543,9 +537,7 @@ def _double_sersic_source_kwargs(
             n_sersic = 4.0
         else:
             n_sersic = 1.0
-        indices = color_gradient.get(
-            "component_sersic_indices", (n_sersic, n_sersic)
-        )
+        indices = color_gradient.get("component_sersic_indices", (n_sersic, n_sersic))
     if len(indices) != 2:
         raise ValueError(
             "color_gradient['component_sersic_indices'] must contain two values."
